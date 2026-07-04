@@ -1,0 +1,2333 @@
+{
+  "version": "1.0",
+  "diagramId": "0626ae3c-c59c-4ac1-8372-6531b7deeac2",
+  "title": "Architecture Diagram",
+  "nodes": [
+    {
+      "id": "nextjs-dashboard",
+      "type": "frontend",
+      "label": "Walter Dashboard",
+      "generic_name": "Frontend Dashboard",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Inbound",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "side": "left",
+          "label": "Left 2"
+        }
+      ],
+      "data": {
+        "description": "Next.js dashboard featuring real-time 'Agent Heartbeat', security posture delta timeline, and full decision trail per finding.",
+        "tech": [
+          "Next.js",
+          "Tailwind CSS",
+          "Lucide React",
+          "WebSocket"
+        ],
+        "cloud": "Vercel"
+      }
+    },
+    {
+      "id": "walter-backend",
+      "type": "api-gateway",
+      "label": "Walter Backend",
+      "generic_name": "API Gateway",
+      "ports": [
+        {
+          "id": "sqs-out",
+          "label": "Trigger Scan",
+          "side": "right"
+        },
+        {
+          "id": "client-in",
+          "label": "Client In",
+          "side": "left"
+        },
+        {
+          "id": "db-out",
+          "label": "Metadata DB",
+          "side": "bottom"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "right-6",
+          "label": "Right 6",
+          "side": "right"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "right-7",
+          "label": "Right 7",
+          "side": "right"
+        },
+        {
+          "id": "right-8",
+          "label": "Right 8",
+          "side": "right"
+        },
+        {
+          "id": "right-9",
+          "side": "right",
+          "label": "Right 9"
+        }
+      ],
+      "data": {
+        "tech": [
+          "Node.js 20.x LTS",
+          "TypeScript 5.x",
+          "Express 4.18 (OWASP Hardened)",
+          "Prisma ORM",
+          "AES-256-GCM (Envelope Encryption)",
+          "TLS 1.3 strictly enforced",
+          "OWASP API Security 2023 Compliance",
+          "12-Factor Factor III (Config) via Vault"
+        ]
+      }
+    },
+    {
+      "id": "mastra-orchestrator",
+      "type": "service",
+      "label": "Mastra Workflow Engine (DAG)",
+      "generic_name": "Agent Orchestrator",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Trigger",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Dispatch",
+          "side": "right"
+        },
+        {
+          "id": "out-db",
+          "label": "out-db",
+          "side": "right"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "right-6",
+          "label": "Right 6",
+          "side": "right"
+        },
+        {
+          "id": "right-7",
+          "label": "Right 7",
+          "side": "right"
+        },
+        {
+          "id": "right-8",
+          "label": "Right 8",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-9",
+          "label": "Right 9",
+          "side": "right"
+        },
+        {
+          "id": "right-10",
+          "label": "Right 10",
+          "side": "right"
+        },
+        {
+          "id": "right-11",
+          "label": "Right 11",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "side": "left",
+          "label": "Left 3"
+        }
+      ],
+      "data": {
+        "tech": [
+          "Mastra SDK v0.1.x",
+          "TypeScript 5.x",
+          "Zod v3.x (Evidence Schema)",
+          "12-Factor Factor VI (Stateless Processes)",
+          "mTLS 1.3 (Internal)",
+          "Circuit Breaker (Resilience4j-style)"
+        ]
+      }
+    },
+    {
+      "id": "recon-agent",
+      "type": "service",
+      "label": "RepoScannerAgent",
+      "generic_name": "Reconnaissance Agent",
+      "ports": [
+        {
+          "id": "sqs-in",
+          "label": "SQS In",
+          "side": "left"
+        },
+        {
+          "id": "sqs-out",
+          "label": "SQS Out",
+          "side": "right"
+        },
+        {
+          "id": "db-out",
+          "label": "DB Out",
+          "side": "bottom"
+        },
+        {
+          "id": "github-out",
+          "label": "GitHub API",
+          "side": "top"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-6",
+          "label": "Right 6",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "right-7",
+          "side": "right",
+          "label": "Right 7"
+        }
+      ],
+      "data": {
+        "description": "Performs deep repository reconnaissance using GitHub GraphQL and Tree-sitter AST. Identifies High Value Targets (HVTs) like auth controllers and crypto modules. Stores metadata in an isolated PostgreSQL instance.",
+        "tech": [
+          "GitHub GraphQL API v4",
+          "Tree-sitter AST",
+          "TypeScript 5.x",
+          "Mastra Agent SDK",
+          "Node.js 20.x",
+          "Prisma ORM (Isolated)"
+        ]
+      }
+    },
+    {
+      "id": "scan-agent",
+      "type": "service",
+      "label": "SecretDetectorAgent",
+      "generic_name": "Security Scanner Agent",
+      "ports": [
+        {
+          "id": "sqs-in",
+          "label": "SQS In",
+          "side": "left"
+        },
+        {
+          "id": "sqs-out",
+          "label": "SQS Out",
+          "side": "right"
+        },
+        {
+          "id": "db-out",
+          "label": "DB Out",
+          "side": "bottom"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "right-6",
+          "label": "Right 6",
+          "side": "right"
+        },
+        {
+          "id": "right-7",
+          "label": "Right 7",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "right-8",
+          "label": "Right 8",
+          "side": "right"
+        },
+        {
+          "id": "right-9",
+          "side": "right",
+          "label": "Right 9"
+        }
+      ],
+      "data": {
+        "description": "Detects hardcoded secrets using Shannon entropy (>4.5), regex patterns, and a 2-of-3 signal rule. Includes false positive suppression and masking. (FR-201 to FR-205)",
+        "tech": [
+          "Shannon Entropy Analysis",
+          "Regex Signature Matching",
+          "Contextual Heuristics",
+          "False Positive Suppression",
+          "Secret Masking Logic",
+          "TypeScript",
+          "Mastra Agent"
+        ]
+      }
+    },
+    {
+      "id": "memory-agent",
+      "type": "service",
+      "label": "RegressionMemoryAgent",
+      "generic_name": "Memory & Regression Agent",
+      "ports": [
+        {
+          "id": "sqs-in",
+          "label": "SQS In",
+          "side": "left"
+        },
+        {
+          "id": "sqs-out",
+          "label": "SQS Out",
+          "side": "right"
+        },
+        {
+          "id": "db-out",
+          "label": "DB Out",
+          "side": "bottom"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "right-4",
+          "side": "right",
+          "label": "Right 4"
+        }
+      ],
+      "data": {
+        "description": "Manages security memory using Qdrant vector storage with a 0.85 cosine threshold. Tracks NEW/PERSISTENT/RESOLVED/REGRESSION lifecycle. (FR-401 to FR-405)",
+        "tech": [
+          "Qdrant Vector Search",
+          "OpenAI text-embedding-3-small",
+          "Lifecycle State Machine (NEW/PERSISTENT/RESOLVED/REGRESSION)",
+          "Semantic Similarity (Cosine > 0.85)",
+          "TypeScript",
+          "Mastra Agent"
+        ]
+      }
+    },
+    {
+      "id": "validation-agent",
+      "type": "service",
+      "label": "ValidationAgent (Enkrypt Gate)",
+      "generic_name": "Validation & Guardrail Agent",
+      "ports": [
+        {
+          "id": "sqs-in",
+          "label": "SQS In",
+          "side": "left"
+        },
+        {
+          "id": "sqs-out",
+          "label": "SQS Out",
+          "side": "right"
+        },
+        {
+          "id": "db-out",
+          "label": "DB Out",
+          "side": "bottom"
+        },
+        {
+          "id": "enkrypt-out",
+          "label": "Enkrypt AI",
+          "side": "top"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "right-6",
+          "side": "right",
+          "label": "Right 6"
+        }
+      ],
+      "data": {
+        "description": "Filters hallucinations using Enkrypt AI, verifies code snippets against source, and validates evidence against Zod schemas. (FR-501 to FR-503)",
+        "tech": [
+          "Enkrypt AI SDK",
+          "Hallucination Filtering",
+          "Evidence Verification Gate",
+          "Zod Schema Validation",
+          "TypeScript",
+          "Mastra Agent"
+        ]
+      }
+    },
+    {
+      "id": "report-agent",
+      "type": "service",
+      "label": "ReportSynthesizerAgent",
+      "generic_name": "Reporting Agent",
+      "ports": [
+        {
+          "id": "sqs-in",
+          "label": "SQS In",
+          "side": "left"
+        },
+        {
+          "id": "sqs-out",
+          "label": "SQS Out",
+          "side": "right"
+        },
+        {
+          "id": "db-out",
+          "label": "DB Out",
+          "side": "bottom"
+        },
+        {
+          "id": "ws-out",
+          "label": "WebSocket Out",
+          "side": "top"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "right-6",
+          "label": "Right 6",
+          "side": "right"
+        },
+        {
+          "id": "left-5",
+          "label": "Left 5",
+          "side": "left"
+        },
+        {
+          "id": "right-7",
+          "side": "right",
+          "label": "Right 7"
+        }
+      ],
+      "data": {
+        "description": "Synthesizes final reports, calculates 0-100 Security Posture Score, generates 3-sentence executive summaries, and streams via WebSocket. (FR-601 to FR-604)",
+        "tech": [
+          "Deterministic Aggregation Logic",
+          "Walter Security Posture Score Engine (0-100)",
+          "Executive Summary Generation (3-sentence)",
+          "Markdown Report Generation",
+          "WebSocket Streaming",
+          "TypeScript",
+          "Mastra Agent"
+        ]
+      }
+    },
+    {
+      "id": "qdrant-db",
+      "type": "database",
+      "label": "Qdrant (Security Memory)",
+      "generic_name": "Vector Database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Query/Store",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "tech": [
+          "Qdrant v1.7.x (Distributed)",
+          "HNSW Indexing",
+          "AES-256-GCM at rest (LUKS)",
+          "TLS 1.3 in transit",
+          "mTLS Authentication"
+        ]
+      }
+    },
+    {
+      "id": "enkrypt-ai-service",
+      "type": "service",
+      "label": "Enkrypt AI Service",
+      "generic_name": "Security Guardrails",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Verify",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "description": "Security guardrail layer. Performs output toxicity/bias checks and CVE ID verification to prevent LLM hallucinations.",
+        "tech": [
+          "Enkrypt AI API"
+        ],
+        "cloud": "External API",
+        "isolated": true
+      }
+    },
+    {
+      "id": "github-api-client",
+      "type": "client",
+      "label": "GitHub API",
+      "generic_name": "GitHub API Client",
+      "ports": [
+        {
+          "id": "in",
+          "label": "API Call",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        }
+      ],
+      "data": {
+        "tech": [
+          "GitHub GraphQL v4 API",
+          "TLS 1.3 strictly enforced",
+          "Certificate Pinning (SHA-256)",
+          "Rate Limit Header Tracking"
+        ]
+      }
+    },
+    {
+      "id": "redis-cache-layer",
+      "type": "cache",
+      "label": "Redis Cache",
+      "generic_name": "Cache & Rate Limiter",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Cache In",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "left-3",
+          "side": "left",
+          "label": "Left 3"
+        }
+      ],
+      "data": {
+        "description": "Distributed cache for GitHub API rate-limit management and workflow state caching.",
+        "tech": [
+          "Redis"
+        ],
+        "cloud": "AWS ElastiCache"
+      }
+    },
+    {
+      "id": "observability-platform",
+      "type": "service",
+      "label": "Observability (Trace ID & Logs)",
+      "generic_name": "Observability Platform",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Telemetry In",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "left-5",
+          "label": "Left 5",
+          "side": "left"
+        },
+        {
+          "id": "left-6",
+          "side": "left",
+          "label": "Left 6"
+        }
+      ],
+      "data": {
+        "description": "Centralized logging and tracing. Tracks unique trace_id across all Mastra steps to provide a full decision trail for every finding.",
+        "tech": [
+          "OpenTelemetry",
+          "Axiom/CloudWatch"
+        ],
+        "cloud": "AWS Managed Service",
+        "isolated": true
+      }
+    },
+    {
+      "id": "metadata-db",
+      "type": "database",
+      "label": "PostgreSQL (Metadata)",
+      "generic_name": "Relational Database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "SQL In",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "left-3",
+          "side": "left",
+          "label": "Left 3"
+        }
+      ],
+      "data": {
+        "description": "Relational database storing encrypted GitHub PATs (AES-256-GCM) and scan metadata.",
+        "tech": [
+          "PostgreSQL",
+          "Encryption-at-Rest"
+        ]
+      }
+    },
+    {
+      "id": "aws-kms",
+      "type": "service",
+      "label": "AWS KMS (Key Management)",
+      "generic_name": "Key Management Service",
+      "ports": [
+        {
+          "id": "in",
+          "label": "KMS In",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "left-3",
+          "side": "left",
+          "label": "Left 3"
+        }
+      ],
+      "data": {
+        "tech": [
+          "AWS KMS (FIPS 140-2 Level 3)",
+          "AES-256-GCM Key Provider",
+          "IAM Role-based Access Control (Least Privilege)"
+        ],
+        "isolated": true
+      }
+    },
+    {
+      "id": "vuln-analyzer-agent",
+      "type": "service",
+      "label": "VulnAnalyzerAgent",
+      "generic_name": "Vulnerability Analysis Agent",
+      "ports": [
+        {
+          "id": "sqs-in",
+          "label": "SQS In",
+          "side": "left"
+        },
+        {
+          "id": "sqs-out",
+          "label": "SQS Out",
+          "side": "right"
+        },
+        {
+          "id": "db-out",
+          "label": "DB Out",
+          "side": "bottom"
+        },
+        {
+          "id": "ghsa-out",
+          "label": "GHSA API",
+          "side": "top"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "right-6",
+          "label": "Right 6",
+          "side": "right"
+        },
+        {
+          "id": "right-7",
+          "side": "right",
+          "label": "Right 7"
+        }
+      ],
+      "data": {
+        "description": "Performs taint-flow analysis (source-to-sink), GHSA CVE lookups, CWE assignment, and CVSS v4.0 scoring using Tree-sitter AST. (FR-301 to FR-305)",
+        "tech": [
+          "Taint-flow Analysis (Source-to-Sink)",
+          "OWASP Top 10 & API Security 2023",
+          "GHSA API Integration",
+          "CVSS v4.0 Scoring",
+          "Tree-sitter AST",
+          "TypeScript",
+          "Mastra Agent"
+        ]
+      }
+    },
+    {
+      "id": "rate-limit-controller",
+      "type": "service",
+      "label": "Rate & Cost Controller",
+      "generic_name": "Rate & Cost Controller",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Check In",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Redis Out",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-2",
+          "side": "right",
+          "label": "Right 2"
+        }
+      ],
+      "data": {
+        "description": "Enforces GitHub API rate limits and manages LLM token quotas to prevent service exhaustion and cost overruns.",
+        "tech": [
+          "Redis",
+          "Fixed Window Counter",
+          "Token Bucket"
+        ],
+        "cloud": "aws",
+        "isolated": false
+      }
+    },
+    {
+      "id": "privacy-filter",
+      "type": "service",
+      "label": "Data Privacy Filter",
+      "generic_name": "Privacy Filter",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Data In",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Masked Out",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "left-5",
+          "side": "left",
+          "label": "Left 5"
+        }
+      ],
+      "data": {
+        "description": "Anonymizes PII and sensitive code patterns before sending data to external LLM providers to ensure compliance.",
+        "tech": [
+          "Presidio",
+          "Regex",
+          "Data Masking"
+        ],
+        "cloud": "aws",
+        "isolated": false
+      }
+    },
+    {
+      "id": "ghsa-api-client",
+      "type": "client",
+      "label": "GHSA API",
+      "generic_name": "Vulnerability Database",
+      "ports": [
+        {
+          "id": "out-cve",
+          "label": "CVE Data",
+          "side": "right"
+        },
+        {
+          "id": "in",
+          "label": "Input",
+          "side": "left"
+        }
+      ],
+      "data": {
+        "description": "GitHub Advisory Database for CVE lookups and vulnerability intelligence.",
+        "tech": [
+          "GHSA API",
+          "REST"
+        ],
+        "isolated": false
+      }
+    },
+    {
+      "id": "aws-sqs-bus",
+      "type": "message-queue",
+      "label": "AWS SQS (Agent Bus)",
+      "generic_name": "Message Queue",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Inbound Messages",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Outbound Messages",
+          "side": "right"
+        },
+        {
+          "id": "right-2",
+          "label": "Right 2",
+          "side": "right"
+        },
+        {
+          "id": "left-2",
+          "label": "Left 2",
+          "side": "left"
+        },
+        {
+          "id": "left-3",
+          "label": "Left 3",
+          "side": "left"
+        },
+        {
+          "id": "right-3",
+          "label": "Right 3",
+          "side": "right"
+        },
+        {
+          "id": "left-4",
+          "label": "Left 4",
+          "side": "left"
+        },
+        {
+          "id": "right-4",
+          "label": "Right 4",
+          "side": "right"
+        },
+        {
+          "id": "left-5",
+          "label": "Left 5",
+          "side": "left"
+        },
+        {
+          "id": "right-5",
+          "label": "Right 5",
+          "side": "right"
+        },
+        {
+          "id": "left-6",
+          "label": "Left 6",
+          "side": "left"
+        },
+        {
+          "id": "right-6",
+          "side": "right",
+          "label": "Right 6"
+        }
+      ],
+      "data": {
+        "description": "Asynchronous message queue for decoupled agent communication and task distribution.",
+        "tech": [
+          "AWS SQS (Standard/FIFO)",
+          "Dead Letter Queues (DLQ)",
+          "IAM Role-based Access Control"
+        ],
+        "cloud": "aws",
+        "isolated": false
+      }
+    },
+    {
+      "id": "recon-db",
+      "type": "database",
+      "label": "Recon Metadata DB",
+      "generic_name": "Relational Database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Inbound",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "description": "Isolated metadata store for RepoScannerAgent.",
+        "tech": [
+          "PostgreSQL",
+          "Encryption-at-Rest"
+        ],
+        "isolated": false
+      }
+    },
+    {
+      "id": "scan-db",
+      "type": "database",
+      "label": "Secret Findings DB",
+      "generic_name": "Relational Database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Inbound",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "description": "Isolated findings store for SecretDetectorAgent.",
+        "tech": [
+          "PostgreSQL",
+          "Encryption-at-Rest"
+        ],
+        "isolated": false
+      }
+    },
+    {
+      "id": "vuln-db",
+      "type": "database",
+      "label": "Vulnerability Findings DB",
+      "generic_name": "Relational Database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Inbound",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "description": "Isolated findings store for VulnAnalyzerAgent.",
+        "tech": [
+          "PostgreSQL",
+          "Encryption-at-Rest"
+        ],
+        "isolated": false
+      }
+    },
+    {
+      "id": "report-db",
+      "type": "database",
+      "label": "Report Storage DB",
+      "generic_name": "Relational Database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "Inbound",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "description": "Isolated storage for generated security reports.",
+        "tech": [
+          "PostgreSQL",
+          "Encryption-at-Rest"
+        ],
+        "isolated": false
+      }
+    },
+    {
+      "id": "validation-findings-db",
+      "type": "database",
+      "label": "Validation Findings DB",
+      "generic_name": "main database",
+      "ports": [
+        {
+          "id": "in",
+          "label": "in",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "engine": "PostgreSQL",
+        "tech": [
+          "Validation Findings DB"
+        ],
+        "description": "Stores core data",
+        "isolated": false
+      }
+    },
+    {
+      "id": "cicd-validation-gate",
+      "type": "service",
+      "label": "CI/CD Validation Gates",
+      "generic_name": "CI/CD Validation Pipeline",
+      "ports": [
+        {
+          "id": "validate-in",
+          "label": "code-push",
+          "side": "top"
+        },
+        {
+          "id": "validate-out",
+          "label": "gate-pass",
+          "side": "bottom"
+        },
+        {
+          "id": "in",
+          "label": "in",
+          "side": "left"
+        },
+        {
+          "id": "out",
+          "label": "Output",
+          "side": "right"
+        }
+      ],
+      "data": {
+        "description": "Automated CI/CD pipeline that enforces Zod schema compliance and validates mathematical confidence models against PRD specifications.",
+        "tech": [
+          "GitHub Actions",
+          "TypeScript 5.x",
+          "Zod v3.x",
+          "Vitest",
+          "Mathematical Model Verification"
+        ],
+        "cloud": "aws",
+        "isolated": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "dashboard-to-backend",
+      "source": {
+        "nodeId": "nextjs-dashboard",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "walter-backend",
+        "portId": "client-in"
+      },
+      "type": "http",
+      "label": "HTTPS/WS"
+    },
+    {
+      "id": "backend-to-orchestrator",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "in"
+      },
+      "type": "internal-api",
+      "label": "Trigger Workflow"
+    },
+    {
+      "id": "back-to-redis",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "redis-cache-layer",
+        "portId": "in"
+      },
+      "type": "cache",
+      "label": "Session/Rate Limit"
+    },
+    {
+      "id": "orchestrator-to-recon",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "recon-agent",
+        "portId": "sqs-in"
+      },
+      "type": "internal-api",
+      "label": "Start Recon"
+    },
+    {
+      "id": "mastra-to-scan-parallel",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "out-db"
+      },
+      "target": {
+        "nodeId": "scan-agent",
+        "portId": "sqs-in"
+      },
+      "type": "internal-api",
+      "label": "gRPC/mTLS (Evidence Model)"
+    },
+    {
+      "id": "mastra-to-mem",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "memory-agent",
+        "portId": "sqs-in"
+      },
+      "type": "internal-api",
+      "label": "step 3: regression check"
+    },
+    {
+      "id": "mastra-to-val",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "validation-agent",
+        "portId": "sqs-in"
+      },
+      "type": "internal-api",
+      "label": "step 4: guardrails"
+    },
+    {
+      "id": "mastra-to-rep",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "report-agent",
+        "portId": "sqs-in"
+      },
+      "type": "internal-api",
+      "label": "step 5: report generation"
+    },
+    {
+      "id": "recon-to-github",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "github-api-client",
+        "portId": "in"
+      },
+      "type": "http",
+      "label": "Fetch File Tree"
+    },
+    {
+      "id": "memory-to-qdrant",
+      "source": {
+        "nodeId": "memory-agent",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "qdrant-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": "Vector Storage"
+    },
+    {
+      "id": "validation-to-enkrypt",
+      "source": {
+        "nodeId": "validation-agent",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "enkrypt-ai-service",
+        "portId": "in"
+      },
+      "type": "http",
+      "label": "Hallucination Check"
+    },
+    {
+      "id": "report-to-dashboard",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "nextjs-dashboard",
+        "portId": "in"
+      },
+      "type": "websocket",
+      "label": "Live Updates"
+    },
+    {
+      "id": "orchestrator-to-obs",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "observability-platform",
+        "portId": "in"
+      },
+      "type": "internal-api",
+      "label": "Trace & Log Data"
+    },
+    {
+      "id": "backend-to-postgres",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "metadata-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": "Metadata Persistence"
+    },
+    {
+      "id": "scan-to-obs",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "observability-platform",
+        "portId": "left-2"
+      },
+      "type": "event-stream",
+      "label": "Trace Log"
+    },
+    {
+      "id": "workflow-to-redis",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-7"
+      },
+      "target": {
+        "nodeId": "redis-cache-layer",
+        "portId": "left-2"
+      },
+      "type": "cache",
+      "label": "rate limit check"
+    },
+    {
+      "id": "workflow-to-pg",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-8"
+      },
+      "target": {
+        "nodeId": "metadata-db",
+        "portId": "left-2"
+      },
+      "type": "database",
+      "label": "persist state"
+    },
+    {
+      "id": "recon-to-obs",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "observability-platform",
+        "portId": "left-3"
+      },
+      "type": "event-stream",
+      "label": "Trace Log"
+    },
+    {
+      "id": "memory-to-obs",
+      "source": {
+        "nodeId": "memory-agent",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "observability-platform",
+        "portId": "left-4"
+      },
+      "type": "event-stream",
+      "label": "Trace Log"
+    },
+    {
+      "id": "validation-to-obs",
+      "source": {
+        "nodeId": "validation-agent",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "observability-platform",
+        "portId": "left-5"
+      },
+      "type": "event-stream",
+      "label": "Trace Log"
+    },
+    {
+      "id": "report-to-obs",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "observability-platform",
+        "portId": "left-6"
+      },
+      "type": "event-stream",
+      "label": "Trace Log"
+    },
+    {
+      "id": "recon-to-scan",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "scan-agent",
+        "portId": "left-2"
+      },
+      "type": "async-event",
+      "label": "HVT Flow"
+    },
+    {
+      "id": "scan-to-memory",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "memory-agent",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": "Findings to Memory"
+    },
+    {
+      "id": "memory-to-validation",
+      "source": {
+        "nodeId": "memory-agent",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "validation-agent",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": "Classified to Validation"
+    },
+    {
+      "id": "validation-to-report",
+      "source": {
+        "nodeId": "validation-agent",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "report-agent",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": "Validated to Report"
+    },
+    {
+      "id": "scan-to-github",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "github-api-client",
+        "portId": "left-2"
+      },
+      "type": "http",
+      "label": null
+    },
+    {
+      "id": "report-to-backend",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "walter-backend",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": "Final Report Delivery"
+    },
+    {
+      "id": "backend-to-kms",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "aws-kms",
+        "portId": "in"
+      },
+      "type": "internal-api",
+      "label": "PAT Encryption"
+    },
+    {
+      "id": "recon-to-vuln",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "sqs-in"
+      },
+      "type": "async-event",
+      "label": "HVT Flow"
+    },
+    {
+      "id": "vuln-to-memory",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "sqs-out"
+      },
+      "target": {
+        "nodeId": "memory-agent",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": "Vulns to Memory"
+    },
+    {
+      "id": "scan-to-vuln",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "report-to-validation",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "validation-agent",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "validation-to-backend",
+      "source": {
+        "nodeId": "validation-agent",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "walter-backend",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "back-to-pf",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "privacy-filter",
+        "portId": "in"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "privacy-to-orchestrator",
+      "source": {
+        "nodeId": "privacy-filter",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "orchestrator-to-rate-limit",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-9"
+      },
+      "target": {
+        "nodeId": "rate-limit-controller",
+        "portId": "in"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "rate-limit-to-github",
+      "source": {
+        "nodeId": "rate-limit-controller",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "github-api-client",
+        "portId": "left-3"
+      },
+      "type": "http",
+      "label": null
+    },
+    {
+      "id": "scan-to-report",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "report-agent",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": "Findings Stream"
+    },
+    {
+      "id": "vuln-to-report",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "report-agent",
+        "portId": "left-4"
+      },
+      "type": "internal-api",
+      "label": "Vulnerabilities Stream"
+    },
+    {
+      "id": "mastra-to-vuln-parallel",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-10"
+      },
+      "target": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": "gRPC/mTLS (Evidence Model)"
+    },
+    {
+      "id": "recon-to-kms",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "aws-kms",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "rep-to-pg",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "metadata-db",
+        "portId": "left-3"
+      },
+      "type": "database",
+      "label": null
+    },
+    {
+      "id": "scan-to-kms",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "aws-kms",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "backend-to-dashboard",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "nextjs-dashboard",
+        "portId": "left-2"
+      },
+      "type": "websocket",
+      "label": null
+    },
+    {
+      "id": "report-to-privacy",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "privacy-filter",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "privacy-to-backend",
+      "source": {
+        "nodeId": "privacy-filter",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "walter-backend",
+        "portId": "left-4"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "backend-to-ratelimit",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-7"
+      },
+      "target": {
+        "nodeId": "rate-limit-controller",
+        "portId": "left-2"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "ratelimit-to-redis",
+      "source": {
+        "nodeId": "rate-limit-controller",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "redis-cache-layer",
+        "portId": "left-3"
+      },
+      "type": "cache",
+      "label": null
+    },
+    {
+      "id": "vulns-to-github-ghsa",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "github-api-client",
+        "portId": "left-4"
+      },
+      "type": "http",
+      "label": null
+    },
+    {
+      "id": "scan-to-privacy",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-7"
+      },
+      "target": {
+        "nodeId": "privacy-filter",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": "Mask PII"
+    },
+    {
+      "id": "vuln-to-privacy",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "privacy-filter",
+        "portId": "left-4"
+      },
+      "type": "internal-api",
+      "label": "Mask PII"
+    },
+    {
+      "id": "validation-to-privacy",
+      "source": {
+        "nodeId": "validation-agent",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "privacy-filter",
+        "portId": "left-5"
+      },
+      "type": "internal-api",
+      "label": null
+    },
+    {
+      "id": "vuln-to-ghsa",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "ghsa-api-client",
+        "portId": "in"
+      },
+      "type": "http",
+      "label": null
+    },
+    {
+      "id": "github-to-recon",
+      "source": {
+        "nodeId": "github-api-client",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "recon-agent",
+        "portId": "left-2"
+      },
+      "type": "http",
+      "label": null
+    },
+    {
+      "id": "recon-to-sqs-publish",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "in"
+      },
+      "type": "async-event",
+      "label": "Publish Recon Results"
+    },
+    {
+      "id": "sqs-to-scan-consume",
+      "source": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "scan-agent",
+        "portId": "left-3"
+      },
+      "type": "async-event",
+      "label": "Consume Recon Results (Secrets)"
+    },
+    {
+      "id": "sqs-to-vuln-consume",
+      "source": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "right-2"
+      },
+      "target": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "left-4"
+      },
+      "type": "async-event",
+      "label": "Consume Recon Results (Vulns)"
+    },
+    {
+      "id": "scan-to-sqs-publish",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-8"
+      },
+      "target": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "left-2"
+      },
+      "type": "async-event",
+      "label": "Publish Secret Findings"
+    },
+    {
+      "id": "vuln-to-sqs-publish",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "left-3"
+      },
+      "type": "async-event",
+      "label": "Publish Vuln Findings"
+    },
+    {
+      "id": "sqs-to-memory-consume",
+      "source": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "right-3"
+      },
+      "target": {
+        "nodeId": "memory-agent",
+        "portId": "left-4"
+      },
+      "type": "async-event",
+      "label": "Consume Findings for Memory"
+    },
+    {
+      "id": "memory-to-sqs-publish",
+      "source": {
+        "nodeId": "memory-agent",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "left-4"
+      },
+      "type": "async-event",
+      "label": "Publish Classified Findings"
+    },
+    {
+      "id": "sqs-to-validation-consume",
+      "source": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "right-4"
+      },
+      "target": {
+        "nodeId": "validation-agent",
+        "portId": "left-4"
+      },
+      "type": "async-event",
+      "label": "Consume for Validation"
+    },
+    {
+      "id": "validation-to-sqs-publish",
+      "source": {
+        "nodeId": "validation-agent",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "left-5"
+      },
+      "type": "async-event",
+      "label": "Publish Validated Findings"
+    },
+    {
+      "id": "sqs-to-report-consume",
+      "source": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "right-5"
+      },
+      "target": {
+        "nodeId": "report-agent",
+        "portId": "left-5"
+      },
+      "type": "async-event",
+      "label": "Consume for Reporting"
+    },
+    {
+      "id": "backend-to-sqs-trigger",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-8"
+      },
+      "target": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "left-6"
+      },
+      "type": "async-event",
+      "label": "Trigger Scan Task"
+    },
+    {
+      "id": "sqs-to-recon-consume",
+      "source": {
+        "nodeId": "aws-sqs-bus",
+        "portId": "right-6"
+      },
+      "target": {
+        "nodeId": "recon-agent",
+        "portId": "left-3"
+      },
+      "type": "async-event",
+      "label": "Consume Recon Task"
+    },
+    {
+      "id": "recon-to-db-persist",
+      "source": {
+        "nodeId": "recon-agent",
+        "portId": "right-7"
+      },
+      "target": {
+        "nodeId": "recon-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": "Store Recon Metadata"
+    },
+    {
+      "id": "scan-to-db-persist",
+      "source": {
+        "nodeId": "scan-agent",
+        "portId": "right-9"
+      },
+      "target": {
+        "nodeId": "scan-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": "Store Secret Findings"
+    },
+    {
+      "id": "vuln-to-db-persist",
+      "source": {
+        "nodeId": "vuln-analyzer-agent",
+        "portId": "right-7"
+      },
+      "target": {
+        "nodeId": "vuln-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": "Store Vuln Findings"
+    },
+    {
+      "id": "report-to-db-persist",
+      "source": {
+        "nodeId": "report-agent",
+        "portId": "right-7"
+      },
+      "target": {
+        "nodeId": "report-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": "Store Final Reports"
+    },
+    {
+      "id": "8381aaf0-aa15-40ea-9c9f-8b28349768ee",
+      "source": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "right-11"
+      },
+      "target": {
+        "nodeId": "validation-findings-db",
+        "portId": "in"
+      },
+      "type": "database",
+      "label": null
+    },
+    {
+      "id": "cicd-to-orchestrator",
+      "source": {
+        "nodeId": "cicd-validation-gate",
+        "portId": "out"
+      },
+      "target": {
+        "nodeId": "mastra-orchestrator",
+        "portId": "left-3"
+      },
+      "type": "internal-api",
+      "label": "validate-contracts"
+    },
+    {
+      "id": "aca5c6fd-66c5-4aed-9e48-ce97f575af35",
+      "source": {
+        "nodeId": "walter-backend",
+        "portId": "right-9"
+      },
+      "target": {
+        "nodeId": "cicd-validation-gate",
+        "portId": "in"
+      },
+      "type": "internal-api",
+      "label": null
+    }
+  ],
+  "groups": [
+    {
+      "children": [
+        "recon-agent",
+        "scan-agent",
+        "vuln-analyzer-agent",
+        "memory-agent",
+        "validation-agent",
+        "report-agent",
+        "privacy-filter"
+      ],
+      "id": "agent-microservices-group",
+      "label": "Agent Microservices"
+    },
+    {
+      "children": [
+        "cicd-validation-gate",
+        "aws-kms",
+        "observability-platform",
+        "rate-limit-controller"
+      ],
+      "id": "infrastructure-group",
+      "label": "Infrastructure & DevOps"
+    },
+    {
+      "children": [
+        "nextjs-dashboard"
+      ],
+      "id": "frontend-group",
+      "label": "Frontend Layer"
+    },
+    {
+      "children": [
+        "walter-backend",
+        "mastra-orchestrator",
+        "aws-sqs-bus"
+      ],
+      "id": "orchestration-group",
+      "label": "Orchestration & Messaging"
+    },
+    {
+      "children": [
+        "qdrant-db",
+        "metadata-db",
+        "recon-db",
+        "scan-db",
+        "vuln-db",
+        "report-db",
+        "validation-findings-db",
+        "redis-cache-layer"
+      ],
+      "id": "data-persistence-group",
+      "label": "Data Persistence Layer (Isolated)"
+    },
+    {
+      "children": [
+        "github-api-client",
+        "ghsa-api-client",
+        "enkrypt-ai-service"
+      ],
+      "id": "external-integrations-group",
+      "label": "External Integrations"
+    }
+  ],
+  "metadata": {}
+}

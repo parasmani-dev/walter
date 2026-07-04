@@ -46,10 +46,12 @@ async function initParser() {
  * @param repoPath Path to the repository
  * @returns Array of relative paths to HVT files
  */
-export async function analyzeAST(repoPath: string): Promise<string[]> {
+export async function analyzeAST(repoPath: string): Promise<{ hvtFiles: string[], capHit: boolean }> {
   await initParser();
+  let capHit = false;
   const allFiles = walkDir(repoPath);
   if (allFiles.length >= 5000) {
+    capHit = true;
     console.warn(`[RepoScannerAgent] WARNING: Hard cap of 5000 files reached. Scanning may be incomplete.`);
   }
   const hvtFiles: string[] = [];
@@ -116,5 +118,5 @@ export async function analyzeAST(repoPath: string): Promise<string[]> {
     }
   }
 
-  return hvtFiles;
+  return { hvtFiles, capHit };
 }

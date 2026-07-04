@@ -10,6 +10,7 @@ export const RepoScanMetadataSchema = z.object({
   clonePath: z.string(),
   commitSha: z.string(),
   hvtFiles: z.array(z.string()),
+  capHit: z.boolean().default(false),
 });
 
 export const SecretFindingSchema = z.object({

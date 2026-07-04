@@ -27,10 +27,10 @@ const analyzeASTTool = {
   id: "analyzeAST",
   description: "Parse the AST of a local repository and identify High Value Targets (HVTs).",
   inputSchema: z.object({ repoPath: z.string() }),
-  outputSchema: z.object({ hvtFiles: z.array(z.string()) }),
+  outputSchema: z.object({ hvtFiles: z.array(z.string()), capHit: z.boolean() }),
   execute: async ({ context }: any) => {
-    const hvtFiles = await analyzeAST(context.repoPath);
-    return { hvtFiles };
+    const { hvtFiles, capHit } = await analyzeAST(context.repoPath);
+    return { hvtFiles, capHit };
   }
 };
 
@@ -64,7 +64,7 @@ export async function runRepoScanner(repositoryUrl: string) {
   try {
     // 2. Analyze AST
     console.log(`[RepoScannerAgent] Analyzing AST for High Value Targets...`);
-    const hvtFiles = await analyzeAST(repoPath);
+    const { hvtFiles, capHit } = await analyzeAST(repoPath);
     console.log(`[RepoScannerAgent] Found ${hvtFiles.length} HVTs:`, hvtFiles);
 
     // 3. Construct the event payload
@@ -72,7 +72,8 @@ export async function runRepoScanner(repositoryUrl: string) {
       repositoryUrl,
       clonePath: repoPath,
       commitSha,
-      hvtFiles
+      hvtFiles,
+      capHit
     };
 
     // Validate against our Zod schema
