@@ -19,10 +19,13 @@
   },
   "homepage": "https://github.com/parasmani-dev/walter#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@mastra/core": "^1.49.0",
     "@prisma/client": "^7.8.0",
+    "@qdrant/js-client-rest": "^1.18.0",
     "dotenv": "^17.4.2",
     "prisma": "^7.8.0",
+    "semver": "^7.8.5",
     "sqlite3": "^6.0.1",
     "tree-sitter-wasms": "^0.1.13",
     "ts-node": "^10.9.2",
@@ -31,6 +34,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^26.1.0"
+    "@types/node": "^26.1.0",
+    "@types/semver": "^7.7.1"
   }
 }

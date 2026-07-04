@@ -1,41 +1,85 @@
+require("dotenv").config();
 import { runRepoScanner } from "./src/agents/RepoScannerAgent";
 import { runSecretDetector } from "./src/agents/SecretDetectorAgent";
+import { runVulnAnalyzer } from "./src/agents/VulnAnalyzerAgent";
+import { runRegressionMemory } from "./src/agents/RegressionMemoryAgent";
+import { processValidation } from "./src/agents/ValidationAgent";
 import fs from "fs";
 import path from "path";
 
-async function main() {
-  const targetRepo = "https://github.com/auth0/express-jwt.git";
+async function runPipeline(commitPass: string, repoUrl: string) {
+  console.log(`\n=============================\nStarting Pipeline: ${commitPass}\n=============================`);
+  const { metadata: repoMetadata, cleanup } = await runRepoScanner(repoUrl);
+  repoMetadata.commitSha = commitPass; // Override for testing
 
-  console.log(`Starting Feature 1-3 Workflow Test on ${targetRepo}...`);
-  try {
-    const { metadata: repoMetadata, cleanup } = await runRepoScanner(targetRepo);
-    console.log("[RepoScannerAgent] Workflow Success! Output:");
-    console.log(JSON.stringify(repoMetadata, null, 2));
-    
-    // Inject some fake secrets into the cloned repo to test SecretDetectorAgent
-    const testFilePath = path.join(repoMetadata.clonePath, "test-secrets-fixture.js");
-    fs.writeFileSync(testFilePath, `
-      const awsKey = "AKIAIOSFODNN7EXAMPLE";
-      const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-      const privateKey = "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDK\\n-----END PRIVATE KEY-----";
-      const dbUrl = "postgres://admin:superSecretPassword123@localhost:5432/db";
-      const randomHighEntropy = "xQ3!v9$mPzL@7kY#2wN*8jF^cR5&bT1"; 
-      const lowEntropy = "aaaaaaaabbbbbbbbccccccccdddddddd";
+  const secrets = await runSecretDetector(repoMetadata);
+
+  // Inject fake vulnerable dependencies and taint-flow file
+  const testPkgPath = path.join(repoMetadata.clonePath, "package.json");
+  fs.writeFileSync(testPkgPath, JSON.stringify({
+    name: "test-vuln-app",
+    dependencies: {
+      "lodash": "4.17.15" // known CVEs in GHSA
+    }
+  }));
+  
+  const testTaintPath = path.join(repoMetadata.clonePath, "test-taint-fixture.js");
+  if (commitPass === "commit-1") {
+    // Original vulnerability
+    fs.writeFileSync(testTaintPath, `
+      const express = require('express');
+      const app = express();
+      const child_process = require('child_process');
+      app.get('/vuln', (req, res) => {
+        child_process.exec(req.query.cmd, (err, stdout) => { res.send(stdout); });
+        eval(req.query.cmd);
+      });
     `);
-    
-    // Add to HVT so it gets scanned first
-    repoMetadata.hvtFiles.push("test-secrets-fixture.js");
-
-    const secrets = await runSecretDetector(repoMetadata);
-    console.log("[SecretDetectorAgent] Workflow Success! Output:");
-    console.log(JSON.stringify(secrets, null, 2));
-    
-    cleanup();
-    console.log("Cleanup complete.");
-  } catch (err) {
-    console.error("Workflow Failed:", err);
-    process.exit(1);
+  } else {
+    // In commit-2, we add an unrelated line to shift the exec vulnerability down by one line.
+    // The eval vulnerability is removed. A new db.query vulnerability is added.
+    fs.writeFileSync(testTaintPath, `
+      const express = require('express');
+      const app = express();
+      const child_process = require('child_process');
+      const db = require('db');
+      app.get('/vuln', (req, res) => {
+        console.log("UNRELATED SHIFT LINE"); // SHIFTS EVERYTHING DOWN
+        child_process.exec(req.query.cmd, (err, stdout) => { res.send(stdout); });
+        db.query("SELECT * FROM users WHERE id=" + req.query.id); // NEW
+      });
+    `);
   }
+
+  repoMetadata.hvtFiles.push("test-taint-fixture.js");
+
+  const vulns = await runVulnAnalyzer(repoMetadata);
+  
+  const allFindings = [...secrets, ...vulns];
+  const regressions = await runRegressionMemory(repoMetadata, allFindings);
+  
+  console.log(`\n[RegressionMemoryAgent] Workflow Success! Output for ${commitPass}:`);
+  console.log(JSON.stringify(regressions.filter(r => r.finding.findingType === "TAINT_FLOW"), null, 2));
+
+  // Feature 6: Enkrypt + Zod Validation
+  const malformedFinding = { badField: "no-schema-match", data: 123 }; // Should fail Zod
+  const validationInput = [...regressions, malformedFinding];
+  const fakeSummary = commitPass === "commit-2" 
+    ? "Analysis complete. Found a Critical Remote Code Execution (RCE) vulnerability!" 
+    : ""; // "RCE" isn't in findings (it's SQLi and exec), so Enkrypt should flag hallucination on commit-2.
+
+  const validationResults = await processValidation(validationInput, fakeSummary);
+  console.log(`\n[ValidationAgent] Final Results for ${commitPass}:`);
+  console.log(JSON.stringify(validationResults, null, 2));
+
+  cleanup();
 }
 
-main();
+async function main() {
+  const repoUrl = "https://github.com/auth0/express-jwt.git";
+  await runPipeline("commit-1", repoUrl);
+  await runPipeline("commit-2", repoUrl);
+  console.log("Cleanup complete.");
+}
+
+main().catch(console.error);
