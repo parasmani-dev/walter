@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-500: #10b981;
+  --color-bg-dark: #0a0a0a;
+  --color-bg-card: #141414;
+  --color-text-body: #e5e5e5;
+  --color-border-dark: #262626;
+
+  /* Status Colors */
+  --color-status-critical: #ef4444; /* red-500 */
+  --color-status-high: #f97316; /* orange-500 */
+  --color-status-new: #f59e0b; /* amber-500 */
+  --color-status-resolved: #22c55e; /* green-500 */
+  --color-status-persistent: #737373; /* neutral-500 */
+
+  /* Fonts */
+  --font-sans: "Inter", "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", monospace;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+@layer components {
+  .hacker-card {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border-dark);
+    border-radius: 0.125rem; /* rounded-sm for sharp edges */
+  }
+
+  .hacker-input {
+    background-color: var(--color-bg-dark);
+    border: 1px solid var(--color-border-dark);
+    color: var(--color-text-body);
+    font-family: var(--font-mono);
+    border-radius: 0.125rem;
+  }
+  .hacker-input:focus {
+    outline: none;
+    border-color: var(--color-status-resolved);
+  }
+
+  .hacker-button {
+    background-color: var(--color-status-resolved);
+    color: #000;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    border-radius: 0.125rem;
+    transition: opacity 0.2s;
+  }
+  .hacker-button:hover {
+    opacity: 0.9;
+  }
+  .hacker-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
