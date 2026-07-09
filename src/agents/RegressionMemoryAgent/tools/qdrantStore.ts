@@ -1,7 +1,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import crypto from "crypto";
 
-export const COLLECTION_NAME = "walter_snapshots_v3";
+export const COLLECTION_NAME = "walter_findings";
 const VECTOR_SIZE = 768; // Matching gemini-embedding-001 with outputDimensionality: 768
 
 let _qdrant: QdrantClient | null = null;
@@ -35,21 +35,23 @@ export async function ensureCollection() {
       });
       console.log(`[Qdrant] Created collection ${COLLECTION_NAME}`);
       
-      // Create a keyword index for repoUrl filtering
+      // Create keyword indices for filtering
       await client.createPayloadIndex(COLLECTION_NAME, {
         field_name: "repoUrl",
         field_schema: "keyword",
         wait: true
       });
-      console.log(`[Qdrant] Created payload index for repoUrl`);
-
-      // Create a keyword index for commitSha filtering
       await client.createPayloadIndex(COLLECTION_NAME, {
         field_name: "commitSha",
         field_schema: "keyword",
         wait: true
       });
-      console.log(`[Qdrant] Created payload index for commitSha`);
+      await client.createPayloadIndex(COLLECTION_NAME, {
+        field_name: "status",
+        field_schema: "keyword",
+        wait: true
+      });
+      console.log(`[Qdrant] Created payload indices`);
     }
   } catch (e) {
     console.error(`[Qdrant] Error checking/creating collection:`, e);
@@ -57,37 +59,32 @@ export async function ensureCollection() {
   }
 }
 
-export interface SnapshotPayload {
+export interface FindingPayload {
   repoUrl: string;
   commitSha: string;
   timestamp: number;
-  findings: any[]; // Full structured findings
+  status: "NEW" | "PERSISTENT" | "REGRESSION" | "RESOLVED";
+  finding: any; 
 }
 
-export async function upsertSnapshot(
+export async function upsertFinding(
   repoUrl: string,
   commitSha: string,
   embedding: number[],
-  findings: any[]
+  finding: any,
+  status: "NEW" | "PERSISTENT" | "REGRESSION" | "RESOLVED"
 ) {
   await ensureCollection();
   const client = getQdrantClient();
 
-  // Generate a deterministic UUID based on repoUrl and commitSha
-  const idHash = crypto.createHash('md5').update(`${repoUrl}:${commitSha}`).digest('hex');
-  const uuid = [
-    idHash.slice(0, 8),
-    idHash.slice(8, 12),
-    idHash.slice(12, 16),
-    idHash.slice(16, 20),
-    idHash.slice(20, 32)
-  ].join('-');
+  const uuid = crypto.randomUUID();
 
-  const payload: SnapshotPayload = {
+  const payload: FindingPayload = {
     repoUrl,
     commitSha,
     timestamp: Date.now(),
-    findings
+    status,
+    finding
   };
 
   await client.upsert(COLLECTION_NAME, {
@@ -101,18 +98,23 @@ export async function upsertSnapshot(
     ]
   });
   
-  console.log(`[Qdrant] Upserted snapshot for ${repoUrl} @ ${commitSha}`);
+  console.log(`[Qdrant] Upserted finding (${status}) for ${repoUrl} @ ${commitSha}`);
 }
 
 /**
- * Find the most recent prior snapshot for a given repo URL, excluding the current commit.
+ * Find the most similar historical finding vector for a given repo, excluding current commit.
+ * Returns the highest scoring matches above the threshold (handled by caller), tie-broken by most recent timestamp.
  */
-export async function getPriorSnapshot(repoUrl: string, currentCommitSha: string): Promise<SnapshotPayload | null> {
+export async function searchFinding(
+  repoUrl: string,
+  currentCommitSha: string,
+  embedding: number[]
+): Promise<{ score: number, payload: FindingPayload } | null> {
   await ensureCollection();
   const client = getQdrantClient();
 
-  // Query by filter, not by vector similarity, to get all snapshots for this repo
-  const result = await client.scroll(COLLECTION_NAME, {
+  const result = await client.search(COLLECTION_NAME, {
+    vector: embedding,
     filter: {
       must: [
         {
@@ -131,17 +133,94 @@ export async function getPriorSnapshot(repoUrl: string, currentCommitSha: string
         }
       ]
     },
-    limit: 100, // Assuming we won't have more than 100 snapshots for a hackathon demo
+    limit: 10, // Fetch top 10 to apply tie-break logic
     with_payload: true
   });
 
-  const snapshots = result.points.map(p => p.payload as unknown as SnapshotPayload);
+  if (result.length === 0) return null;
+
+  // Map results to extract score and payload
+  const matches = result.map(p => ({
+    score: p.score,
+    payload: p.payload as unknown as FindingPayload
+  }));
+
+  // Find the highest score
+  const highestScore = Math.max(...matches.map(m => m.score));
+
+  // If there are multiple matches with exactly the same top score, or very close scores, we want to tie-break by most recent timestamp.
+  // The user requested: "When search() returns multiple vectors above 0.85 threshold, select match by most recent commitSha/timestamp, not just highest similarity score. Add explicit tie-break logic for this."
   
-  if (snapshots.length === 0) {
-    return null;
+  // So we filter all matches that are above 0.85
+  const thresholdMatches = matches.filter(m => m.score >= 0.85);
+
+  if (thresholdMatches.length === 0) {
+    // If none above threshold, return the absolute highest anyway so the caller can log it and fail the threshold check
+    // Sort highest score first, then by timestamp descending
+    matches.sort((a, b) => {
+      if (Math.abs(b.score - a.score) > 0.0001) return b.score - a.score;
+      return b.payload.timestamp - a.payload.timestamp;
+    });
+    return matches[0];
   }
 
-  // Sort by timestamp descending
-  snapshots.sort((a, b) => b.timestamp - a.timestamp);
-  return snapshots[0];
+  // Tie-break logic: Sort threshold matches by timestamp descending (most recent first)
+  thresholdMatches.sort((a, b) => b.payload.timestamp - a.payload.timestamp);
+  
+  return thresholdMatches[0];
+}
+
+/**
+ * Get all findings from the immediate prior commit.
+ * We need this to detect which findings were dropped (RESOLVED) in the current commit.
+ */
+export async function getPriorActiveFindings(
+  repoUrl: string,
+  currentCommitSha: string
+): Promise<{ id: string, vector: number[], payload: FindingPayload }[]> {
+  await ensureCollection();
+  const client = getQdrantClient();
+
+  // First, find the most recent commitSha that isn't the current one
+  // We can query 1 result just to get the timestamp of the latest finding
+  const latestResult = await client.scroll(COLLECTION_NAME, {
+    filter: {
+      must: [
+        {
+          key: "repoUrl",
+          match: {
+            value: repoUrl
+          }
+        }
+      ],
+      must_not: [
+        {
+          key: "commitSha",
+          match: {
+            value: currentCommitSha
+          }
+        }
+      ]
+    },
+    limit: 1000,
+    with_payload: true,
+    with_vector: true
+  });
+
+  const points = latestResult.points.map(p => ({
+    id: String(p.id),
+    vector: p.vector as number[],
+    payload: p.payload as unknown as FindingPayload
+  }));
+
+  if (points.length === 0) return [];
+
+  // Sort all historical points by timestamp descending
+  points.sort((a, b) => b.payload.timestamp - a.payload.timestamp);
+
+  // The most recent commitSha is the one from the newest point
+  const priorCommitSha = points[0].payload.commitSha;
+
+  // Filter points to only include those from the prior commit AND that are active (not RESOLVED)
+  return points.filter(p => p.payload.commitSha === priorCommitSha && p.payload.status !== "RESOLVED");
 }
