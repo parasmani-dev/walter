@@ -13,6 +13,7 @@ async function runPipeline(commitPass: string, repoUrl: string) {
   repoMetadata.commitSha = commitPass; // Override for testing
 
   const secrets = await runSecretDetector(repoMetadata);
+  console.log("SECRETS FOUND:", secrets.map(s => s.filePath));
 
   // Inject fake vulnerable dependencies and taint-flow file
   const testPkgPath = path.join(repoMetadata.clonePath, "package.json");
@@ -61,6 +62,10 @@ async function runPipeline(commitPass: string, repoUrl: string) {
   console.log(`\n[RegressionMemoryAgent] Workflow Success! Output for ${commitPass}:`);
   console.log(JSON.stringify(regressions.filter(r => r.finding.findingType === "TAINT_FLOW"), null, 2));
 
+  const { calculateScore } = require("./src/agents/ReportSynthesizerAgent/tools/scoreCalculator");
+  const finalScore = calculateScore(regressions);
+  console.log(`\n[ScoreCalculator] FINAL SCORE for ${commitPass}: ${finalScore.numericScore} (Grade ${finalScore.letterGrade})`);
+
   // Feature 6: Enkrypt + Zod Validation
   const malformedFinding = { badField: "no-schema-match", data: 123 }; // Should fail Zod
   const validationInput = [...regressions, malformedFinding];
@@ -76,7 +81,7 @@ async function runPipeline(commitPass: string, repoUrl: string) {
 }
 
 async function main() {
-  const repoUrl = "https://github.com/auth0/express-jwt.git";
+  const repoUrl = "https://github.com/Durgeshwar-AI/pdfToPng.git";
   await runPipeline("commit-1", repoUrl);
   await runPipeline("commit-2", repoUrl);
   console.log("Cleanup complete.");

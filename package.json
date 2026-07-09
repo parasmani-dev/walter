@@ -21,13 +21,11 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@mastra/core": "^1.49.0",
-    "@prisma/client": "^7.8.0",
     "@qdrant/js-client-rest": "^1.18.0",
     "axios": "^1.18.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "prisma": "^7.8.0",
     "semver": "^7.8.5",
     "sqlite3": "^6.0.1",
     "tree-sitter-wasms": "^0.1.13",

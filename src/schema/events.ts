@@ -41,7 +41,7 @@ export const VulnFindingSchema = z.object({
 });
 
 export const RegressionResultSchema = z.object({
-  classification: z.enum(["NEW", "RESOLVED", "PERSISTENT"]),
+  classification: z.enum(["NEW", "RESOLVED", "PERSISTENT", "REGRESSION"]),
   priorSha: z.string().optional(),
   timestampDeltaMs: z.number().optional(),
   // The original finding (could be secret or vuln)
