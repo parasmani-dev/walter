@@ -9,7 +9,10 @@ export async function runEnkryptHallucinationCheck(
     return { verdict: "PASS", confidence: 1.0, message: "Stubbed - No API Key" };
   }
 
-    try {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+  try {
     const serializedFindings = JSON.stringify(findingsContext.map((f: any) => f.finding || f));
     const response = await fetch("https://api.enkryptai.com/guardrails/detect", {
       method: "POST",
@@ -25,20 +28,29 @@ export async function runEnkryptHallucinationCheck(
             "policy_text": `The response must only reference vulnerabilities present in this findings list: ${serializedFindings}. Flag any claim in the response text that references a vulnerability type, severity, or location not present in this list. Strict rule: if the text mentions a vulnerability type name (e.g. 'RCE', 'SQLi') that is not explicitly written in the JSON, it is a policy violation and you must flag it.`
           }
         }
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.warn(`[ValidationAgent] Enkrypt API error: ${response.status} - ${errorText}`);
-      return { verdict: "PASS", confidence: 0.5, message: `API Error: ${response.status}` };
+      return { verdict: "FAIL", confidence: 0.0, message: "Guardrail: Unable to verify (timeout or API error)" };
     }
 
     const data: any = await response.json();
     console.log(`[ValidationAgent] Enkrypt full response:`, JSON.stringify(data, null, 2));
     
-    // Enkrypt places the policy_violation verdict in details.policy_violation.policy_violated
     const policyViolationDetail = data.details?.policy_violation;
+
+    // Handle Enkrypt's internal timeout where it returns 200 OK but with an Error explanation
+    if (policyViolationDetail?.violating_policy === "Error" || policyViolationDetail?.explanation?.includes("timeout")) {
+      console.warn(`[ValidationAgent] Enkrypt internal error/timeout detected.`);
+      return { verdict: "FAIL", confidence: 0.0, message: "Guardrail: Unable to verify (timeout)" };
+    }
+
     const isHallucinated = policyViolationDetail?.policy_violated === true;
     
     return {
@@ -48,7 +60,9 @@ export async function runEnkryptHallucinationCheck(
     };
 
   } catch (err: any) {
+    clearTimeout(timeoutId);
     console.warn(`[ValidationAgent] Enkrypt request failed: ${err.message}`);
-    return { verdict: "PASS", confidence: 0.0, message: "Network Error" };
+    // If it was aborted due to our 5s timeout, err.name will often be 'AbortError'
+    return { verdict: "FAIL", confidence: 0.0, message: "Guardrail: Unable to verify (timeout)" };
   }
 }

@@ -8,6 +8,9 @@ export async function runEnkryptRiskScoreCheck(
     return { verdict: "PASS", confidence: 1.0, message: "Stubbed - No API Key" };
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
   try {
     const response = await fetch("https://api.enkryptai.com/guardrails/detect", {
       method: "POST",
@@ -18,17 +21,29 @@ export async function runEnkryptRiskScoreCheck(
       body: JSON.stringify({
         text: JSON.stringify(findingsContext),
         detectors: { "injection_attack": { "enabled": true }, "policy_violation": { "enabled": true, "policy_text": "Do not expose secrets or vulnerabilities" }, "pii": { "enabled": true, "entities": ["PERSON", "EMAIL"] } }
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.warn(`[ValidationAgent] Enkrypt API error: ${response.status} - ${errorText}`);
-      return { verdict: "PASS", confidence: 0.5, message: `API Error: ${response.status}` };
+      return { verdict: "FAIL", confidence: 0.0, message: "Guardrail: Unable to verify (timeout or API error)" };
     }
 
     const data: any = await response.json();
     
+    // Handle Enkrypt's internal timeout where it returns 200 OK but with an Error explanation
+    const details = data.details || {};
+    for (const key of Object.keys(details)) {
+      if (details[key]?.violating_policy === "Error" || details[key]?.explanation?.includes("timeout")) {
+         console.warn(`[ValidationAgent] Enkrypt internal error/timeout detected in risk check.`);
+         return { verdict: "FAIL", confidence: 0.0, message: "Guardrail: Unable to verify (timeout)" };
+      }
+    }
+
     // Check if any detector failed or found a violation
     const violations = data.detections || [];
     const isSafe = violations.length === 0;
@@ -41,7 +56,8 @@ export async function runEnkryptRiskScoreCheck(
     };
 
   } catch (err: any) {
+    clearTimeout(timeoutId);
     console.warn(`[ValidationAgent] Enkrypt request failed: ${err.message}`);
-    return { verdict: "PASS", confidence: 0.0, message: "Network Error" };
+    return { verdict: "FAIL", confidence: 0.0, message: "Guardrail: Unable to verify (timeout)" };
   }
 }
