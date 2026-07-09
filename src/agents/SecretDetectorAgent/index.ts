@@ -25,9 +25,10 @@ function walkDir(dir: string, fileList: string[] = []) {
   for (const file of files) {
     if (fileList.length >= 5000) break;
     // Exclude common large/unnecessary directories
-    if (['.git', 'node_modules', 'dist', 'build', '.next', 'out'].includes(file)) continue;
-    // Exclude lockfiles
-    if (['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'].includes(file)) continue;
+    if (['.git', 'node_modules', 'dist', 'build', '.next', 'out', 'vendor'].includes(file)) continue;
+    // Exclude lockfiles and minified files
+    if (['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock'].includes(file)) continue;
+    if (file.endsWith('.min.js')) continue;
     
     const stat = fs.statSync(path.join(dir, file));
     if (stat.isDirectory()) {
@@ -50,6 +51,15 @@ export const secretDetectorAgent = new Agent({
   } as any,
   tools: {},
 });
+
+function checkContextSignal(line: string): boolean | null {
+  // Note: This only checks the matched line, not surrounding lines - known limitation, not a blocker for now.
+  const lower = line.toLowerCase();
+  // Veto URLs, style classes, and DNS domains
+  if (/class|style|path|svg|css|classname|http|https|dns|\.com/i.test(lower)) return false;
+  if (/key|secret|token|password|auth|credential/i.test(lower)) return true;
+  return null;
+}
 
 /**
  * Runner function for the SecretDetectorAgent workflow.
@@ -90,29 +100,81 @@ export async function runSecretDetector(repoMetadata: z.infer<typeof RepoScanMet
 
     // Regex scan
     const patternMatches = scanFileForPatterns(filePath);
-    for (const match of patternMatches) {
-      findings.push({
-        filePath: relativePath,
-        lineNumber: match.line,
-        patternType: match.type,
-        confidence: match.confidence,
-        maskedSecret: maskSecret(match.text)
-      });
-    }
-
     // Entropy scan
     const entropyMatches = scanFileForHighEntropy(filePath, ENTROPY_THRESHOLD);
+
+    // Combine unique text targets to evaluate
+    const allTargets = new Map<string, {
+      line: number;
+      text: string;
+      fullLine: string;
+      patternTypes: string[];
+      entropyScore?: number;
+      confidence: "LOW" | "MEDIUM" | "HIGH";
+    }>();
+
+    for (const match of patternMatches) {
+      if (!allTargets.has(match.text)) {
+        allTargets.set(match.text, {
+          line: match.line,
+          text: match.text,
+          fullLine: match.fullLine,
+          patternTypes: [match.type],
+          confidence: match.confidence
+        });
+      } else {
+        allTargets.get(match.text)!.patternTypes.push(match.type);
+      }
+    }
+
     for (const match of entropyMatches) {
-      // Deduplicate if already found via regex on the exact same text
-      const alreadyFound = patternMatches.some(p => p.text === match.text);
-      if (!alreadyFound) {
+      if (!allTargets.has(match.text)) {
+        allTargets.set(match.text, {
+          line: match.line,
+          text: match.text,
+          fullLine: match.fullLine,
+          patternTypes: ["HIGH_ENTROPY"],
+          entropyScore: match.score,
+          confidence: "MEDIUM"
+        });
+      } else {
+        const target = allTargets.get(match.text)!;
+        target.entropyScore = match.score;
+        // If it was only a regex hit before, ensure HIGH_ENTROPY is in the types just in case
+        if (!target.patternTypes.includes("HIGH_ENTROPY")) {
+           target.patternTypes.push("HIGH_ENTROPY");
+        }
+      }
+    }
+
+    for (const target of allTargets.values()) {
+      let signals = 0;
+      
+      const entropyHit = target.entropyScore !== undefined && target.entropyScore > ENTROPY_THRESHOLD;
+      const regexHit = target.patternTypes.some(t => t !== "HIGH_ENTROPY");
+      
+      const contextCheck = checkContextSignal(target.fullLine);
+      const contextHit = contextCheck === true; // Veto just suppresses the context signal, it doesn't subtract from signals.
+      
+      if (entropyHit) signals++;
+      if (regexHit) signals++;
+      if (contextHit) signals++;
+      
+      if (signals >= 2) {
+        console.log(`\n[DEBUG Secret] Found secret in ${relativePath}:${target.line}`);
+        console.log(`  Text: ${target.text}`);
+        console.log(`  EntropyHit: ${entropyHit} (Score: ${target.entropyScore})`);
+        console.log(`  RegexHit: ${regexHit} (Types: ${target.patternTypes.join(',')})`);
+        console.log(`  ContextHit: ${contextHit} (Line context check: ${contextCheck})`);
+        
         findings.push({
           filePath: relativePath,
-          lineNumber: match.line,
-          patternType: "HIGH_ENTROPY",
-          entropyScore: match.score,
-          confidence: "MEDIUM",
-          maskedSecret: maskSecret(match.text)
+          lineNumber: target.line,
+          // Prefer regex pattern type over generic HIGH_ENTROPY
+          patternType: target.patternTypes.find(t => t !== "HIGH_ENTROPY") || "HIGH_ENTROPY",
+          entropyScore: target.entropyScore,
+          confidence: target.confidence,
+          maskedSecret: maskSecret(target.text)
         });
       }
     }
