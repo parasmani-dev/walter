@@ -40,7 +40,11 @@ export function calculateScore(findings: any[]) {
     }
   }
 
-  score = score - penalty + bonus;
+  // Use an asymptotic formula to prevent unfair 0-floor on repos with many MEDIUM findings
+  let finalPenalty = 100 * (1 - Math.exp(-penalty / 100));
+  if (finalPenalty > 100) finalPenalty = 100;
+  
+  score = score - finalPenalty + bonus;
 
   if (score > 100) score = 100;
   if (score < 0) score = 0;
