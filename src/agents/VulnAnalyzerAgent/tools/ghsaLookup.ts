@@ -76,18 +76,23 @@ export async function checkDependenciesWithGHSA(repoPath: string): Promise<GhsaM
       }
 
       const vulnerabilities = json.data?.securityVulnerabilities?.nodes || [];
+      const seenAdvisories = new Set<string>();
       
       for (const vuln of vulnerabilities) {
         // Evaluate if our version is vulnerable
         const range = vuln.vulnerableVersionRange; // e.g. ">= 1.2.0, < 1.3.5" or "= 2.0.0"
+        const ghsaId = vuln.advisory.ghsaId;
+        
+        if (seenAdvisories.has(ghsaId)) continue;
         
         try {
           // If the semver package says our version satisfies the vulnerable range, it's a hit!
           if (semver.satisfies(version, range)) {
+            seenAdvisories.add(ghsaId);
             matches.push({
               packageName: pkgName,
               packageVersion: version,
-              cveId: vuln.advisory.ghsaId,
+              cveId: ghsaId,
               description: vuln.advisory.summary,
               severity: vuln.severity.toUpperCase() as any,
               owaspCategory: "API9:2023 Improper Inventory Management" // Vulnerable dependencies map nicely here
