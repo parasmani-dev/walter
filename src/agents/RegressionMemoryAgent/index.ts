@@ -2,13 +2,13 @@ import { Agent } from "@mastra/core/agent";
 import { z } from "zod";
 import { RepoScanMetadataSchema, RegressionResultSchema } from "../../schema/events";
 import { embedText, serializeFinding } from "./tools/embedFindings";
-import { upsertSnapshot, getPriorSnapshot } from "./tools/qdrantStore";
-import { computeRegressionDiff } from "./tools/regressionDiff";
+import { searchFinding, upsertFinding, getPriorActiveFindings } from "./tools/qdrantStore";
+import { classifyFinding, Classification } from "./tools/regressionDiff";
 
 export const regressionMemoryAgent = new Agent({
   name: "RegressionMemoryAgent",
   id: "regressionMemoryAgent",
-  instructions: "You are the RegressionMemoryAgent. You take combined findings, embed them, store in Qdrant keyed by commit SHA, and compare against prior snapshots of the same repo.",
+  instructions: "You are the RegressionMemoryAgent. You take findings, embed them, store in Qdrant, and compare against prior findings for regression tracking.",
   model: {
     provider: "openai",
     name: "gpt-4o-mini",
@@ -23,35 +23,91 @@ export async function runRegressionMemory(
 ): Promise<z.infer<typeof RegressionResultSchema>[]> {
   console.log(`[RegressionMemoryAgent] Processing ${allFindings.length} findings for ${repoMetadata.repositoryUrl} @ ${repoMetadata.commitSha}`);
   
-  // 1. Embed current findings
-  const serialized = allFindings.map(serializeFinding).join("\n");
-  const embedding = await embedText(serialized);
-  
   let regressionResults: z.infer<typeof RegressionResultSchema>[] = [];
   
-  // 2. Fetch prior snapshot
-  console.log(`[RegressionMemoryAgent] Querying Qdrant for prior snapshots of ${repoMetadata.repositoryUrl}...`);
-  const priorSnapshot = await getPriorSnapshot(repoMetadata.repositoryUrl, repoMetadata.commitSha);
-  
-  if (priorSnapshot) {
-    const deltaMs = Date.now() - priorSnapshot.timestamp;
-    console.log(`[RegressionMemoryAgent] Found prior snapshot @ ${priorSnapshot.commitSha}. Computing diff...`);
+  // 1. Process current findings
+  for (const f of allFindings) {
+    const serialized = serializeFinding(f);
+    const embedding = await embedText(serialized);
     
-    // 3. Diff findings
-    regressionResults = computeRegressionDiff(allFindings, priorSnapshot.findings, priorSnapshot.commitSha, deltaMs);
-  } else {
-    console.log(`[RegressionMemoryAgent] No prior snapshot found. All findings are classified as NEW.`);
-    for (const f of allFindings) {
+    // Search for closest historical match
+    const match = await searchFinding(repoMetadata.repositoryUrl, repoMetadata.commitSha, embedding);
+    
+    let classification: Classification = "NEW";
+    let priorSha = undefined;
+    let deltaMs = undefined;
+
+    if (match) {
+      classification = classifyFinding(match.score, match.payload.status);
+      priorSha = match.payload.commitSha;
+      deltaMs = Date.now() - match.payload.timestamp;
+      console.log(`[RegressionMemoryAgent] Match score ${match.score.toFixed(3)} (status: ${match.payload.status}) -> ${classification}`);
+    } else {
+      console.log(`[RegressionMemoryAgent] No match found -> NEW`);
+    }
+    
+    // Add to results
+    regressionResults.push({
+      classification,
+      priorSha,
+      timestampDeltaMs: deltaMs,
+      finding: f
+    });
+
+    // Upsert as new vector representing this finding in the current commit
+    await upsertFinding(
+      repoMetadata.repositoryUrl,
+      repoMetadata.commitSha,
+      embedding,
+      f,
+      classification
+    );
+  }
+
+  // 2. Identify and mark dropped/RESOLVED findings
+  // Get all active findings from the immediate prior commit
+  const priorActives = await getPriorActiveFindings(repoMetadata.repositoryUrl, repoMetadata.commitSha);
+  
+  for (const prior of priorActives) {
+    // If this prior finding isn't highly similar to any of our current findings, it was fixed!
+    // Since we already embedded all current findings, we can just do a similarity check here
+    // But honestly, the easiest way is just to search Qdrant for this prior finding's embedding, 
+    // EXCEPT we haven't flushed current findings to Qdrant? 
+    // Actually, we JUST upserted them in the loop above! So we can search the CURRENT commit.
+    
+    // Check if the prior finding exists in the current commit
+    // But wait, it's easier to just do a strict exact match signature check in memory
+    // or just re-embed and search Qdrant for this specific commit.
+    
+    let foundInCurrent = false;
+    for (const currentFinding of allFindings) {
+      const currentSerialized = serializeFinding(currentFinding);
+      const priorSerialized = serializeFinding(prior.payload.finding);
+      if (currentSerialized === priorSerialized) {
+         foundInCurrent = true;
+         break;
+      }
+    }
+
+    if (!foundInCurrent) {
+      // It was resolved! Mark it as resolved in the current commit by upserting it
+      console.log(`[RegressionMemoryAgent] Finding resolved in this commit. Marking RESOLVED.`);
+      await upsertFinding(
+        repoMetadata.repositoryUrl,
+        repoMetadata.commitSha,
+        prior.vector, // carry over the exact same vector
+        prior.payload.finding,
+        "RESOLVED"
+      );
+      
       regressionResults.push({
-        classification: "NEW",
-        finding: f
+        classification: "RESOLVED",
+        priorSha: prior.payload.commitSha,
+        timestampDeltaMs: Date.now() - prior.payload.timestamp,
+        finding: prior.payload.finding
       });
     }
   }
 
-  // 4. Upsert current snapshot to Qdrant
-  console.log(`[RegressionMemoryAgent] Storing snapshot for ${repoMetadata.commitSha} in Qdrant...`);
-  await upsertSnapshot(repoMetadata.repositoryUrl, repoMetadata.commitSha, embedding, allFindings);
-  
   return regressionResults;
 }
