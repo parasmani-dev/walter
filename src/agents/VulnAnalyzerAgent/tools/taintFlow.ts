@@ -55,63 +55,121 @@ export async function analyzeTaintFlow(filePath: string): Promise<TaintMatch[]> 
   }
 
   const sinks = ['eval', 'exec', 'res.send', 'query']; // 'query' for SQL
-  const sources = ['req.query', 'req.body', 'req.params'];
+  const sources = ['req.query', 'req.body', 'req.params', 'req.headers'];
 
-  const walkNode = (node: any) => {
-    // Look for call_expression nodes
-    if (node.type === 'call_expression' && node.namedChildren.length > 0) {
-      const calleeText = node.namedChildren[0].text;
-      const fullText = node.text;
-      
-      let matchedSink = sinks.find(s => {
-        return calleeText === s || calleeText.endsWith('.' + s);
-      });
-
-      if (matchedSink) {
-        // If the sink call arguments contain a known source text, flag it.
-        // The arguments are typically from index 1 onwards.
-        // For simplicity in a hackathon, we just check if the full node text contains the source.
-        const matchedSource = sources.find(s => fullText.includes(s));
-        if (matchedSource) {
-          
-          let owaspCategory = "API8:2023 Security Misconfiguration"; // Default
-          if (calleeText.includes('exec') || calleeText === 'eval') {
-            owaspCategory = "API8:2023 Security Misconfiguration"; 
+  const analyzeScope = (scopeNode: any) => {
+    const taintedVars = new Set<string>();
+    
+    // Pass 1: Find tainted variables
+    const findTaintedVars = (node: any) => {
+      if (node.type === 'variable_declarator') {
+        const nameNode = node.childForFieldName('name') || node.namedChildren[0];
+        const valueNode = node.childForFieldName('value') || node.namedChildren[1];
+        if (nameNode && valueNode) {
+          const valueText = valueNode.text;
+          if (sources.some(s => valueText.includes(s))) {
+            taintedVars.add(nameNode.text);
           }
-
-          let enclosingFunction = "global";
-          let curr = node.parent;
-          while (curr) {
-            if (curr.type === 'function_declaration' || curr.type === 'arrow_function' || curr.type === 'method_definition') {
-              enclosingFunction = curr.type; // simplistically, we could extract the name, but type is okay
-              if (curr.type === 'function_declaration' && curr.namedChildren[0]) {
-                enclosingFunction = curr.namedChildren[0].text;
-              }
-              break;
-            }
-            curr = curr.parent;
+        }
+      } else if (node.type === 'assignment_expression') {
+        const leftNode = node.childForFieldName('left') || node.namedChildren[0];
+        const rightNode = node.childForFieldName('right') || node.namedChildren[1];
+        if (leftNode && rightNode) {
+          const rightText = rightNode.text;
+          if (sources.some(s => rightText.includes(s))) {
+            taintedVars.add(leftNode.text);
           }
-
-          const snippetHash = fullText.replace(/\s+/g, '');
-          
-          matches.push({
-            line: node.startPosition.row + 1,
-            sink: matchedSink,
-            source: matchedSource,
-            owaspCategory,
-            severity: "CRITICAL",
-            snippetHash,
-            enclosingFunction
-          });
         }
       }
-    }
+      
+      // recurse, but skip nested functions
+      for (const child of node.namedChildren) {
+        if (!['function_declaration', 'arrow_function', 'method_definition'].includes(child.type)) {
+          findTaintedVars(child);
+        }
+      }
+    };
+    findTaintedVars(scopeNode);
 
+    // Pass 2: Find sinks
+    const findSinks = (node: any) => {
+      if (node.type === 'call_expression' && node.namedChildren.length > 0) {
+        const calleeText = node.namedChildren[0].text;
+        const fullText = node.text;
+        
+        let matchedSink = sinks.find(s => calleeText === s || calleeText.endsWith('.' + s));
+        if (matchedSink) {
+          const argsNode = node.childForFieldName('arguments') || node.namedChildren[1];
+          if (argsNode) {
+            const argsText = argsNode.text;
+            
+            // Check direct source
+            let matchedSource = sources.find(s => argsText.includes(s));
+            
+            // Check tainted variables
+            if (!matchedSource) {
+              for (const tVar of taintedVars) {
+                // Look for whole word variable usage in arguments
+                const regex = new RegExp(`\\b${tVar}\\b`);
+                if (regex.test(argsText)) {
+                  matchedSource = `Variable(${tVar})`;
+                  break;
+                }
+              }
+            }
+
+            if (matchedSource) {
+              let owaspCategory = "API8:2023 Security Misconfiguration";
+              if (calleeText.includes('exec') || calleeText === 'eval') {
+                owaspCategory = "API8:2023 Security Misconfiguration"; 
+              }
+
+              let enclosingFunction = "global";
+              let curr = node.parent;
+              while (curr) {
+                if (['function_declaration', 'arrow_function', 'method_definition'].includes(curr.type)) {
+                  enclosingFunction = curr.type;
+                  if (curr.type === 'function_declaration' && curr.namedChildren[0]) {
+                    enclosingFunction = curr.namedChildren[0].text;
+                  }
+                  break;
+                }
+                curr = curr.parent;
+              }
+
+              matches.push({
+                line: node.startPosition.row + 1,
+                sink: matchedSink,
+                source: matchedSource,
+                owaspCategory,
+                severity: "CRITICAL",
+                snippetHash: fullText.replace(/\s+/g, ''),
+                enclosingFunction
+              });
+            }
+          }
+        }
+      }
+
+      // recurse, but skip nested functions
+      for (const child of node.namedChildren) {
+        if (!['function_declaration', 'arrow_function', 'method_definition'].includes(child.type)) {
+          findSinks(child);
+        }
+      }
+    };
+    findSinks(scopeNode);
+  };
+
+  const walkAllScopes = (node: any) => {
+    if (['program', 'function_declaration', 'arrow_function', 'method_definition'].includes(node.type)) {
+      analyzeScope(node);
+    }
     for (const child of node.namedChildren) {
-      walkNode(child);
+      walkAllScopes(child);
     }
   };
 
-  walkNode(tree.rootNode);
+  walkAllScopes(tree.rootNode);
   return matches;
 }
