@@ -33,6 +33,7 @@ export interface PatternMatch {
   type: string;
   confidence: "LOW" | "MEDIUM" | "HIGH";
   text: string;
+  fullLine: string;
 }
 
 /**
@@ -59,7 +60,8 @@ export function scanFileForPatterns(filePath: string): PatternMatch[] {
           line: i + 1,
           type: pattern.type,
           confidence: pattern.confidence as "LOW" | "MEDIUM" | "HIGH",
-          text: matchedText
+          text: matchedText,
+          fullLine: line
         });
       }
     }
