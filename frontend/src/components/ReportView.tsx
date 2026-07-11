@@ -234,7 +234,7 @@ export default function ReportView({ report, status, error, onBack }: ReportView
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    activeIndex={activeIndex}
+                    // @ts-ignore`n              activeIndex={activeIndex}
                     activeShape={renderActiveShape}
                     data={pieData}
                     cx="50%"
@@ -406,3 +406,4 @@ const renderActiveShape = (props: any) => {
     </g>
   );
 };
+
