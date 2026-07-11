@@ -94,6 +94,7 @@ async function processJob(id: string) {
     job.progress = "Done";
 
   } catch (error: any) {
+    console.error(`[jobQueue] Job ${id} failed:`, error);
     job.status = "FAILED";
     job.error = error.message || "An unknown error occurred";
     
