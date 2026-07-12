@@ -22,11 +22,17 @@ let jsLanguage: any;
 let tsLanguage: any;
 
 async function initParser() {
-  if (parserInitialized) return;
+  if ((global as any).treeSitterInitialized) {
+    jsLanguage = (global as any).jsLanguage;
+    tsLanguage = (global as any).tsLanguage;
+    return;
+  }
   await Parser.init();
   jsLanguage = await Parser.Language.load(jsWasmPath);
   tsLanguage = await Parser.Language.load(tsWasmPath);
-  parserInitialized = true;
+  (global as any).treeSitterInitialized = true;
+  (global as any).jsLanguage = jsLanguage;
+  (global as any).tsLanguage = tsLanguage;
 }
 
 export interface TaintMatch {
