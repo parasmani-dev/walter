@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 const Parser = require("web-tree-sitter");
 
-const jsWasmPath = path.resolve(__dirname, "../../node_modules/tree-sitter-wasms/out/tree-sitter-javascript.wasm");
-const tsWasmPath = path.resolve(__dirname, "../../node_modules/tree-sitter-wasms/out/tree-sitter-typescript.wasm");
+const treeSitterWasmsDir = path.dirname(require.resolve("tree-sitter-wasms/package.json"));
+const jsWasmPath = path.join(treeSitterWasmsDir, "out/tree-sitter-javascript.wasm");
+const tsWasmPath = path.join(treeSitterWasmsDir, "out/tree-sitter-typescript.wasm");
 
 let parserInitialized = false;
 let jsLanguage: any;
