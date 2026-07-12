@@ -37,21 +37,21 @@ Built for the **HiDevs × Mastra AI Agent Builder Hackathon 2026**.
 
 ## Overview
 
-**Walter** is an autonomous security posture agent for GitHub repositories. Point it at any public Node.js/TypeScript repo, and it runs a coordinated pipeline of specialized agents to find hardcoded secrets, trace real taint-flow vulnerabilities, check dependencies against live CVE databases, and — its core differentiator — **remember your repo's security history across commits**, so a vulnerability that was fixed and later reintroduced gets flagged as a **regression**, not reported as new.
+**Walter** is a 5-agent security posture pipeline for Node.js/TypeScript GitHub repositories, orchestrated by Mastra. It detects hardcoded secrets (entropy + regex + context, 2-of-3 quorum), traces taint-flow vulnerabilities via AST parsing (not regex/string matching), cross-references dependencies against live GitHub Security Advisories, and — the differentiating capability — persists every scan as a 768-dimension vector in Qdrant so that a vulnerability fixed in one commit and reintroduced in a later commit is classified as a **regression**, not reported as a new, unrelated finding.
 
-Every finding is validated through **Enkrypt AI** guardrails before it reaches you, so what you see is grounded in real analysis — not hallucinated CVEs or fabricated line numbers.
+Every finding passes through an Enkrypt AI guardrail check (`/guardrails/detect`) before it reaches the report, with a 5-second fail-safe timeout so an unresponsive check degrades gracefully instead of blocking the pipeline.
 
 ---
 
 ## Why Walter Is Different
 
-Most code scanners are stateless — every scan starts from zero, and a bug fixed last month that quietly comes back next month looks identical to a brand-new issue. Walter treats security posture as a **story across commits**, not a snapshot:
+Stateless scanners re-evaluate a repository from zero on every run: a bug fixed last month and silently reintroduced next month is reported identically to a brand-new issue, with no signal that it's a repeat. Walter's `RegressionMemoryAgent` closes that gap with a concrete, testable mechanism:
 
-- 🔁 **Regression-aware.** Every scan is embedded and stored in Qdrant. New findings are compared against historical scan vectors — a match above a 0.85 similarity threshold against a previously-resolved finding is flagged as a **regression**, distinct from a genuinely new issue.
-- 🎯 **Low-noise secret detection.** Combines entropy analysis, regex pattern matching, and contextual signals — a finding only surfaces when at least two of three signals agree, avoiding the false-positive floods common in naive scanners.
-- 🧵 **Real taint-flow analysis.** Tracks tainted variables through function scope from source to sink using AST parsing (via Web Tree-Sitter) — not string matching.
-- 🛡️ **Guardrailed output.** Every finding passes through Enkrypt AI validation before reaching the report, with a fail-safe timeout so a slow check never blocks the pipeline.
-- 📉 **Explainable, non-crashing scores.** Security and quality scores use an asymptotic decay model — one severe finding doesn't collapse the score to zero, and every score is traceable back to the exact findings behind it.
+- 🔁 **Regression detection, not just detection.** Every finding is embedded via Gemini (`gemini-embedding-001`, 768-dim) and stored in Qdrant. A new finding with ≥0.85 cosine similarity to a previously-resolved finding is classified `REGRESSION`; below that threshold it's `NEW`; an unresolved match across scans is `PERSISTENT`. Fingerprinting is by sink/scope/hash, not line number, so the match survives code reformatting.
+- 🎯 **Secret detection with a stated false-positive control.** Entropy score, regex pattern, and contextual signal must agree on at least 2 of 3 before a finding surfaces — this specific quorum rule was added after an earlier iteration produced 73 false positives on a single test repo; the quorum brought that to 0 on the same repo without losing true positives.
+- 🧵 **Taint-flow analysis via AST, not pattern matching.** `VulnAnalyzerAgent` performs intraprocedural taint tracking — following a variable from its source (e.g. `req.body`) through single-hop assignments to its sink (e.g. `exec()`) — using Web Tree-Sitter parse trees, not regex over raw text.
+- 🛡️ **Guardrail validation is enforced, not advisory.** Every finding is checked against Enkrypt AI before inclusion in the final report. On endpoint timeout, the finding is explicitly labeled `Guardrail: Unable to verify (timeout)` rather than silently passing through unvalidated.
+- 📉 **Scoring that doesn't floor at zero on one finding.** Security and quality scores use an asymptotic decay function rather than linear subtraction, so a single critical finding degrades the score meaningfully without collapsing an otherwise-clean repository to 0. Every score component is traceable to the specific finding(s) that produced it.
 
 ---
 
@@ -187,13 +187,13 @@ curl https://your-backend-url/scan/<jobId>
 
 ## Features
 
-- 🔍 Full repository scan (secrets, taint-flow vulnerabilities, dependency CVEs)
-- 📦 Standalone dependency/CVE check
-- 🔁 Regression check against prior scans of the same repository
-- 📊 Live-updating file tree and file-relationship graph during scan
-- 🧠 Persistent, cross-commit regression memory (the core differentiator)
-- 🛡️ Guardrail-validated findings — no unverified claims in the final report
-- 📈 Explainable scoring with per-finding signal breakdowns
+- 🔍 Full repository scan — secret detection, AST taint-flow analysis, dependency CVE lookup, all in one pass
+- 📦 Standalone dependency/CVE check against live GHSA data (real advisory IDs, real affected-version ranges, real patched-version suggestions)
+- 🔁 Regression check — compares current findings against every prior scan of the same repository stored in Qdrant
+- 📊 File tree and file-relationship graph update live during scan, reflecting per-file scan status as it completes
+- 🧠 Cross-commit regression memory — the only component in this pipeline with persistent state across scans (see [Architecture](#architecture))
+- 🛡️ Every finding carries an explicit guardrail status (`PASS` / `Unable to verify (timeout)`) — never silently omitted
+- 📈 Each score is decomposable to the specific findings and signal weights that produced it — not a black-box number
 
 ---
 
