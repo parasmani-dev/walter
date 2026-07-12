@@ -296,6 +296,6 @@ Distributed under the MIT License. See [`LICENSE`](./LICENSE) for details.
 
 ## Contact
 
-Maintained by Parasmani Kushwaha 9parasmanikushwaha4@gmail.com) for the HiDevs × Mastra AI Agent Builder Hackathon 2026.
+Maintained by Parasmani Kushwaha (parasmanikushwaha4@gmail.com) for the HiDevs × Mastra AI Agent Builder Hackathon 2026.
 
 For questions about this submission, open an issue on this repository or reach out via the contact details listed on the hackathon's HiDevs platform submission page.
