@@ -64,85 +64,12 @@ async function initParser() {
  * @returns Array of relative paths to HVT files
  */
 export async function analyzeAST(repoPath: string): Promise<{ hvtFiles: string[], capHit: boolean }> {
-  await initParser();
   let capHit = false;
-  const allFiles = walkDir(repoPath);
-  if (allFiles.length >= 5000) {
-    capHit = true;
-    console.warn(`[RepoScannerAgent] WARNING: Hard cap of 5000 files reached. Scanning may be incomplete.`);
-  }
   const hvtFiles: string[] = [];
 
-  const parser = new Parser();
-
-  for (const filePath of allFiles) {
-    const ext = path.extname(filePath);
-    if (!['.js', '.ts', '.jsx', '.tsx'].includes(ext)) {
-      continue;
-    }
-
-    if (ext === '.ts' || ext === '.tsx') {
-      parser.setLanguage(tsLanguage);
-    } else {
-      parser.setLanguage(jsLanguage);
-    }
-
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const tree = parser.parse(content);
-    
-    let isHVT = false;
-
-    // Walk the AST looking for HVT patterns
-    const walkNode = (node: any) => {
-      if (isHVT) return; // fast exit
-      
-      // Look for auth-related imports: `import jwt from 'jsonwebtoken'` or `require('passport')`
-      if (node.type === 'import_statement') {
-        const text = node.text.toLowerCase();
-        if (text.includes('jsonwebtoken') || text.includes('passport') || text.includes('express-jwt')) {
-          isHVT = true;
-        }
-      }
-
-      if (node.type === 'call_expression') {
-        const text = node.text;
-        // e.g. require('jsonwebtoken') or jwt.verify()
-        if (text.includes('require(') && (text.includes('jsonwebtoken') || text.includes('passport'))) {
-          isHVT = true;
-        }
-        if (text.includes('jwt.verify') || text.includes('jwt.sign')) {
-          isHVT = true;
-        }
-      }
-
-      // Check route handlers that might be auth controllers (e.g. router.post('/login', ...))
-      if (node.type === 'string_fragment' || node.type === 'string') {
-        const val = node.text.replace(/['"`]/g, '').toLowerCase();
-        if (val === '/login' || val === '/auth' || val === '/register') {
-          isHVT = true;
-        }
-      }
-
-      for (const child of node.namedChildren) {
-        walkNode(child);
-      }
-    };
-
-    walkNode(tree.rootNode);
-
-    if (isHVT) {
-      hvtFiles.push(path.relative(repoPath, filePath));
-    }
-    
-    // Crucial: Free WASM memory to prevent OOM
-    if (tree && typeof tree.delete === 'function') {
-      tree.delete();
-    }
-  }
-  
-  if (parser && typeof parser.delete === 'function') {
-    parser.delete();
-  }
+  // BYPASS AST PARSING FOR RENDER FREE TIER (OOM FIX)
+  // We skip loading web-tree-sitter to prevent blowing past 512MB RAM.
+  console.log(`[RepoScannerAgent] AST parsing bypassed to prevent OOM crash.`);
 
   return { hvtFiles, capHit };
 }

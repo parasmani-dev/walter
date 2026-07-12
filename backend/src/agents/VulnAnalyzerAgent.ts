@@ -79,6 +79,10 @@ export async function runVulnAnalyzer(repoMetadata: z.infer<typeof RepoScanMetad
     return 0;
   });
 
+  // BYPASS: Taint flow analysis disabled for Render free tier (OOM limit)
+  console.log(`[VulnAnalyzerAgent] Taint flow analysis bypassed to prevent OOM crash.`);
+  
+  /*
   for (const filePath of allFiles) {
     const relativePath = path.relative(repoMetadata.clonePath, filePath);
     const taintMatches = await analyzeTaintFlow(filePath);
@@ -97,6 +101,7 @@ export async function runVulnAnalyzer(repoMetadata: z.infer<typeof RepoScanMetad
       });
     }
   }
+  */
 
   console.log(`[VulnAnalyzerAgent] Scan complete. Found ${findings.length} vulnerabilities.`);
   return findings;
