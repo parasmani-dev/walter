@@ -2,9 +2,20 @@ import fs from "fs";
 import path from "path";
 const Parser = require("web-tree-sitter");
 
-const treeSitterWasmsDir = path.dirname(require.resolve("tree-sitter-wasms/package.json"));
-const jsWasmPath = path.join(treeSitterWasmsDir, "out/tree-sitter-javascript.wasm");
-const tsWasmPath = path.join(treeSitterWasmsDir, "out/tree-sitter-typescript.wasm");
+function findWasm(name: string) {
+  const possiblePaths = [
+    path.resolve(process.cwd(), `node_modules/tree-sitter-wasms/out/${name}`),
+    path.resolve(__dirname, `../../node_modules/tree-sitter-wasms/out/${name}`),
+    path.resolve(__dirname, `../../../node_modules/tree-sitter-wasms/out/${name}`)
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return possiblePaths[0]; // fallback
+}
+
+const jsWasmPath = findWasm("tree-sitter-javascript.wasm");
+const tsWasmPath = findWasm("tree-sitter-typescript.wasm");
 
 /**
  * Recursively find all files in a directory.
