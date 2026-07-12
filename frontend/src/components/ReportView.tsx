@@ -49,24 +49,39 @@ export default function ReportView({ report, status, error, onBack }: ReportView
     );
   }
 
-  // Use realistic defaults for the presentation
+  // Use real report data
   const overallScore = report?.overallScore || {};
   const metadata = report?.metadata || {};
   const rawFindings = report?.findings || [];
-  
-  // Inject mock data if empty for demo purposes
-  const numericScore = overallScore.numericScore !== undefined ? overallScore.numericScore : 56;
-  const grade = overallScore.letterGrade || 'F';
-  
-  const findings = rawFindings.length > 0 ? rawFindings.map(enrichFinding) : [
-    enrichFinding({ finding: { filePath: 'src/routes/auth.ts', findingType: 'VULNERABILITY', severity: 'CRITICAL', description: 'Security Issue' }, classification: 'NEW' }),
-    enrichFinding({ finding: { filePath: 'src/routes/admin.ts', findingType: 'TAINT_FLOW', severity: 'CRITICAL', description: 'API8:2023 Security Misconfiguration' }, classification: 'NEW' }),
-    enrichFinding({ finding: { filePath: 'package.json', findingType: 'DEPENDENCY_CVE', severity: 'HIGH', description: 'API9:2023 Improper Inventory Management' }, classification: 'NEW' }),
-    enrichFinding({ finding: { filePath: 'package.json', findingType: 'DEPENDENCY_CVE', severity: 'MODERATE', description: 'API9:2023 Improper Inventory Management' }, classification: 'NEW' }),
-    enrichFinding({ finding: { filePath: 'package.json', findingType: 'DEPENDENCY_CVE', severity: 'LOW', description: 'API9:2023 Improper Inventory Management' }, classification: 'NEW' }),
-    enrichFinding({ finding: { filePath: 'package.json', findingType: 'DEPENDENCY_CVE', severity: 'LOW', description: 'API9:2023 Improper Inventory Management' }, classification: 'NEW' }),
-    enrichFinding({ finding: { filePath: 'package.json', findingType: 'DEPENDENCY_CVE', severity: 'LOW', description: 'API9:2023 Improper Inventory Management' }, classification: 'NEW' })
-  ];
+  const findings = rawFindings.map(enrichFinding);
+
+  // Compute score dynamically from real findings if backend didn't provide one
+  function computeScore(fs: any[]): number {
+    if (fs.length === 0) return 100;
+    let penalty = 0;
+    for (const f of fs) {
+      const sev = f.finding?.severity || f.finding?.vulnerabilities?.[0]?.severity || 'LOW';
+      if (sev === 'CRITICAL') penalty += 18;
+      else if (sev === 'HIGH') penalty += 12;
+      else if (sev === 'MODERATE' || sev === 'MEDIUM') penalty += 6;
+      else penalty += 2;
+    }
+    return Math.max(0, Math.min(100, 100 - penalty));
+  }
+
+  function computeGrade(score: number): string {
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 55) return 'D';
+    if (score >= 40) return 'F';
+    return 'F';
+  }
+
+  const numericScore = overallScore.numericScore !== undefined
+    ? overallScore.numericScore
+    : computeScore(findings);
+  const grade = overallScore.letterGrade || computeGrade(numericScore);
 
   const scoreColor = numericScore < 40 ? 'text-[#EF4444]' : (numericScore < 70 ? 'text-[#F59E0B]' : 'text-[#22C55E]');
   const ringColor = numericScore < 40 ? '#EF4444' : (numericScore < 70 ? '#F59E0B' : '#22C55E');
@@ -80,9 +95,9 @@ export default function ReportView({ report, status, error, onBack }: ReportView
     return acc;
   }, {});
 
-  const newIssues = findings.filter((f:any) => f.classification === 'NEW').length || 7;
-  const resolvedIssues = findings.filter((f:any) => f.classification === 'RESOLVED').length || 0;
-  const persistentIssues = findings.filter((f:any) => f.classification === 'PERSISTENT').length || 0;
+  const newIssues = findings.filter((f:any) => f.classification === 'NEW').length;
+  const resolvedIssues = findings.filter((f:any) => f.classification === 'RESOLVED').length;
+  const persistentIssues = findings.filter((f:any) => f.classification === 'PERSISTENT').length;
 
   const sevCounts = { CRITICAL: 0, HIGH: 0, MODERATE: 0, LOW: 0 };
   findings.forEach((f: any) => {
@@ -126,8 +141,8 @@ export default function ReportView({ report, status, error, onBack }: ReportView
         <div>
           <h2 className="text-3xl font-bold font-mono text-white mb-2 tracking-tight">Scan Complete</h2>
           <div className="text-[#A1A1AA] font-mono text-sm flex gap-4">
-            <span>Repo: {metadata?.repoUrl || 'Local Repo'}</span>
-            <span>Commit: {metadata?.commitSha || 'latest'}</span>
+            <span>Repo: {metadata?.repositoryUrl || metadata?.repoUrl || 'Unknown'}</span>
+            <span>Commit: {metadata?.commitSha ? metadata.commitSha.slice(0, 7) : 'latest'}</span>
           </div>
         </div>
         <div className="flex gap-4">
