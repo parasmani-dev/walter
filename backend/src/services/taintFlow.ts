@@ -63,8 +63,11 @@ export async function analyzeTaintFlow(filePath: string): Promise<TaintMatch[]> 
   try {
     tree = parser.parse(content);
   } catch (e) {
+    if (parser && typeof parser.delete === 'function') parser.delete();
     return matches;
   }
+
+  try {
 
   const sinks = ['eval', 'exec', 'res.send', 'query']; // 'query' for SQL
   const sources = ['req.query', 'req.body', 'req.params', 'req.headers'];
@@ -182,7 +185,11 @@ export async function analyzeTaintFlow(filePath: string): Promise<TaintMatch[]> 
     }
   };
 
-  walkAllScopes(tree.rootNode);
+  } finally {
+    if (tree && typeof tree.delete === 'function') tree.delete();
+    if (parser && typeof parser.delete === 'function') parser.delete();
+  }
+  
   return matches;
 }
 

@@ -127,6 +127,15 @@ export async function analyzeAST(repoPath: string): Promise<{ hvtFiles: string[]
     if (isHVT) {
       hvtFiles.push(path.relative(repoPath, filePath));
     }
+    
+    // Crucial: Free WASM memory to prevent OOM
+    if (tree && typeof tree.delete === 'function') {
+      tree.delete();
+    }
+  }
+  
+  if (parser && typeof parser.delete === 'function') {
+    parser.delete();
   }
 
   return { hvtFiles, capHit };
