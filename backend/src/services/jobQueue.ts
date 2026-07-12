@@ -14,6 +14,7 @@ export interface Job {
   progress?: string;
   error?: string;
   errorType?: "INVALID_URL" | "PRIVATE_REPO" | "OVERSIZED_REPO" | "GENERIC_ERROR";
+  fileTree?: { name: string; type: 'file' | 'folder'; depth: number; ext?: string }[];
   result?: {
     jsonReport: any;
     markdownReport: string;
@@ -65,6 +66,30 @@ async function processJob(id: string) {
     
     const { metadata: repoMetadata, cleanup } = scanResult;
     cleanupFn = cleanup;
+
+    // Build real file tree from cloned repo
+    const buildFileTree = (dir: string, depth: number = 0, maxDepth: number = 3): { name: string; type: 'file' | 'folder'; depth: number; ext?: string }[] => {
+      const entries: { name: string; type: 'file' | 'folder'; depth: number; ext?: string }[] = [];
+      if (depth > maxDepth) return entries;
+      const { readdirSync, statSync } = require('fs');
+      const { join, extname } = require('path');
+      let items: string[];
+      try { items = readdirSync(dir); } catch { return entries; }
+      for (const item of items) {
+        if (['.git', 'node_modules', 'dist', 'build', '.next'].includes(item)) continue;
+        const fullPath = join(dir, item);
+        let stat;
+        try { stat = statSync(fullPath); } catch { continue; }
+        if (stat.isDirectory()) {
+          entries.push({ name: item, type: 'folder', depth });
+          entries.push(...buildFileTree(fullPath, depth + 1, maxDepth));
+        } else {
+          entries.push({ name: item, type: 'file', depth, ext: extname(item) });
+        }
+      }
+      return entries;
+    };
+    job.fileTree = buildFileTree(repoMetadata.clonePath);
 
     // Check for Oversized Repo Cap Hit
     if (repoMetadata.capHit) {

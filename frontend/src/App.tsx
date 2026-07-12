@@ -92,6 +92,11 @@ function MainApp() {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const statusRes = await axios.get(`${apiUrl}/scan/${startedJobId}`);
         const data = statusRes.data;
+
+        // Always forward the real fileTree as soon as it arrives
+        if (data.fileTree) {
+          setJobData((prev: any) => ({ ...prev, fileTree: data.fileTree }));
+        }
         
         if (data.status === 'COMPLETED' || data.status === 'FAILED') {
           clearInterval(visualInterval);
@@ -101,6 +106,7 @@ function MainApp() {
             status: data.status, 
             currentAgent: 'Done',
             result: data.result,
+            fileTree: data.fileTree,
             error: data.error
           });
           setTimeout(() => setCurrentScreen('SCREEN_4_REPORT'), 500);
