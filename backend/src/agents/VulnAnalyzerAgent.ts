@@ -38,7 +38,8 @@ export async function runVulnAnalyzer(repoMetadata: z.infer<typeof RepoScanMetad
       packageName: match.packageName,
       packageVersion: match.packageVersion,
       cveId: match.cveId,
-      description: match.description
+      description: match.description,
+      richSolution: match.richSolution
     });
   }
 

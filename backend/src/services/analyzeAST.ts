@@ -3,8 +3,8 @@ import path from "path";
 const Parser = require("web-tree-sitter");
 
 // Paths to the wasm files we installed via `tree-sitter-wasms`
-const jsWasmPath = path.resolve(__dirname, "../../../../node_modules/tree-sitter-wasms/out/tree-sitter-javascript.wasm");
-const tsWasmPath = path.resolve(__dirname, "../../../../node_modules/tree-sitter-wasms/out/tree-sitter-typescript.wasm");
+const jsWasmPath = path.resolve(__dirname, "../../node_modules/tree-sitter-wasms/out/tree-sitter-javascript.wasm");
+const tsWasmPath = path.resolve(__dirname, "../../node_modules/tree-sitter-wasms/out/tree-sitter-typescript.wasm");
 
 /**
  * Recursively find all files in a directory.

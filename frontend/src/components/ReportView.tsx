@@ -23,8 +23,9 @@ const enrichFinding = (finding: any) => {
     f.finding.richDescription = "Hardcoded credentials or API keys were detected in the source code. This exposes sensitive access to anyone who can read the repository.";
     f.finding.richSolution = "Remove the secret from the source code, revoke the exposed key immediately, and use environment variables (e.g., process.env) injected at runtime.";
   } else {
-    f.finding.richDescription = "Improper Inventory Management or known vulnerable dependency detected in the project lockfile. Exploitation could lead to unauthorized access or DOS.";
-    f.finding.richSolution = "Update the dependency to the latest patched version using npm audit fix, or manually bump the version in package.json to address the CVE.";
+    // Preserve existing description and solution if available
+    f.finding.richDescription = f.finding.description || "Improper Inventory Management or known vulnerable dependency detected in the project lockfile. Exploitation could lead to unauthorized access or DOS.";
+    f.finding.richSolution = f.finding.richSolution || "Update the dependency to the latest patched version using npm audit fix, or manually bump the version in package.json to address the CVE.";
   }
   
   return f;
@@ -319,7 +320,12 @@ function FindingRow({ finding }: { finding: any }) {
             <span className="font-bold text-white font-mono text-sm">{data?.findingType || 'VULNERABILITY'}</span>
             <span className={`font-mono text-xs ml-auto font-bold uppercase ${sevColor}`}>{data?.severity || 'LOW'}</span>
           </div>
-          <div className="text-sm text-[#A1A1AA]">{data?.owaspCategory || data?.description || 'Security Issue'}</div>
+          <div className="text-sm text-[#A1A1AA]">{data?.description || data?.owaspCategory || 'Security Issue'}</div>
+          {data?.findingType === 'DEPENDENCY_CVE' && data?.packageName && (
+            <div className="text-xs text-[#A1A1AA] mt-1 font-mono">
+              <span className="text-white">{data.packageName}</span> v{data.packageVersion}
+            </div>
+          )}
         </div>
       </div>
 

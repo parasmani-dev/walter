@@ -9,6 +9,7 @@ export interface GhsaMatch {
   description: string;
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   owaspCategory: string;
+  richSolution?: string;
 }
 
 export async function checkDependenciesWithGHSA(repoPath: string): Promise<GhsaMatch[]> {
@@ -49,6 +50,9 @@ export async function checkDependenciesWithGHSA(repoPath: string): Promise<GhsaM
           nodes {
             severity
             vulnerableVersionRange
+            firstPatchedVersion {
+              identifier
+            }
             advisory {
               ghsaId
               summary
@@ -70,6 +74,7 @@ export async function checkDependenciesWithGHSA(repoPath: string): Promise<GhsaM
       });
 
       const json = await response.json();
+      console.log(`GHSA for ${pkgName}:`, JSON.stringify(json, null, 2));
       if (json.errors) {
         console.error(`GHSA Query Error for ${pkgName}:`, json.errors);
         continue;
@@ -89,14 +94,21 @@ export async function checkDependenciesWithGHSA(repoPath: string): Promise<GhsaM
           // If the semver package says our version satisfies the vulnerable range, it's a hit!
           if (semver.satisfies(version, range)) {
             seenAdvisories.add(ghsaId);
+            
+            let richSolution = "Update dependency to a secure version.";
+            if (vuln.firstPatchedVersion && vuln.firstPatchedVersion.identifier) {
+              richSolution = `Upgrade to v${vuln.firstPatchedVersion.identifier}`;
+            }
+
             matches.push({
               packageName: pkgName,
               packageVersion: version,
               cveId: ghsaId,
               description: vuln.advisory.summary,
               severity: vuln.severity.toUpperCase() as any,
-              owaspCategory: "API9:2023 Improper Inventory Management" // Vulnerable dependencies map nicely here
-            });
+              richSolution,
+              owaspCategory: "DEPENDENCY_CVE"
+            } as any);
           }
         } catch (e) {
           // semver mismatch format

@@ -47,7 +47,7 @@ function MainApp() {
     return () => {};
   }, []);
 
-  const handleStartScan = (url: string) => {
+  const handleStartScan = async (url: string) => {
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith('http') && formattedUrl.includes('/')) {
       formattedUrl = `https://github.com/${formattedUrl}`;
@@ -56,25 +56,59 @@ function MainApp() {
     setRepoUrl(formattedUrl);
     setCurrentScreen('SCREEN_3_LIVE_SCAN');
     
-    // Simulate real-time analysis taking about 7-10 seconds
+    // Start backend scan
+    let startedJobId = null;
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await axios.post(`${apiUrl}/scan`, { repositoryUrl: formattedUrl });
+      startedJobId = res.data.jobId;
+      setJobId(startedJobId);
+    } catch (err: any) {
+      console.error(err);
+      setJobData({ status: 'FAILED', error: err.message });
+      setCurrentScreen('SCREEN_4_REPORT');
+      return;
+    }
+
     let prog = 0;
     setJobData({ progress: 0, status: 'RUNNING', currentAgent: 'SecretDetectorAgent' });
     
-    const intervalId = setInterval(() => {
-      prog += Math.floor(Math.random() * 8) + 4; // increment 4 to 11% every 700ms (~7-8 seconds total)
-      if (prog >= 100) {
-        prog = 100;
-        clearInterval(intervalId);
-        setJobData({ progress: 100, status: 'COMPLETED', result: {} });
-        setTimeout(() => setCurrentScreen('SCREEN_4_REPORT'), 500);
-      } else {
-        let agent = 'SecretDetectorAgent';
-        if (prog > 25) agent = 'VulnAnalyzerAgent';
-        if (prog > 50) agent = 'RegressionMemoryAgent';
-        if (prog > 75) agent = 'ValidationAgent';
-        setJobData({ progress: prog, status: 'RUNNING', currentAgent: agent });
+    // Visual animation interval
+    const visualInterval = setInterval(() => {
+      prog += Math.floor(Math.random() * 5) + 2; 
+      if (prog >= 99) prog = 99; // Cap at 99% while waiting for backend
+      
+      let agent = 'SecretDetectorAgent';
+      if (prog > 25) agent = 'VulnAnalyzerAgent';
+      if (prog > 50) agent = 'RegressionMemoryAgent';
+      if (prog > 75) agent = 'ValidationAgent';
+      
+      setJobData((prev: any) => ({ ...prev, progress: prog, currentAgent: agent }));
+    }, 1000);
+
+    // Backend polling interval
+    const pollInterval = setInterval(async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const statusRes = await axios.get(`${apiUrl}/scan/${startedJobId}`);
+        const data = statusRes.data;
+        
+        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+          clearInterval(visualInterval);
+          clearInterval(pollInterval);
+          setJobData({ 
+            progress: 100, 
+            status: data.status, 
+            currentAgent: 'Done',
+            result: data.result,
+            error: data.error
+          });
+          setTimeout(() => setCurrentScreen('SCREEN_4_REPORT'), 500);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    }, 700);
+    }, 2000);
   };
 
   const Header = () => (

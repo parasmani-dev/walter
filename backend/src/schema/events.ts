@@ -37,7 +37,8 @@ export const VulnFindingSchema = z.object({
   packageName: z.string().optional(),
   packageVersion: z.string().optional(),
   cveId: z.string().optional(),
-  description: z.string().optional()
+  description: z.string().optional(),
+  richSolution: z.string().optional()
 });
 
 export const RegressionResultSchema = z.object({
